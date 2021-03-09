@@ -3,6 +3,7 @@ package edu.citec.sc.queggweb.data;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderHeaderAware;
+import lombok.Getter;
 import lombok.val;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,8 @@ import java.util.Map;
 public class QuestionLoader {
     private static final String CACHE_FILENAME = "/tmp/trie.cache";
     private int loaded = 0;
+
+    @Getter
     Trie<Question> trie = new Trie<>();
 
     private void loadFromCSV() throws IOException {
@@ -101,9 +104,8 @@ public class QuestionLoader {
     }
 
     public List<TrieNode<Question>> autocomplete(String query, List<Map<String, String>> results, int topN, int maxDepth) {
-        final String queryLower = query.toLowerCase();
         final List<TrieNode<Question>> suggestions = new ArrayList<>();
-        TrieNode<Question> cur = this.trie.getRoot().completer(queryLower);
+        TrieNode<Question> cur = this.trie.getRoot().find(query, true);
 
         this.addResults(query, suggestions, results, cur, topN, maxDepth, 0, false);
 

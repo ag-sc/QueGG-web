@@ -1,11 +1,18 @@
 package edu.citec.sc.queggweb;
 
+import edu.citec.sc.queggweb.data.QuestionLoader;
 import edu.citec.sc.queggweb.data.Trie;
 import edu.citec.sc.queggweb.data.TrieNode;
 import lombok.val;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -220,5 +227,19 @@ public class TrieTests {
         assertEquals(3, aa.getChildren().size());
 
         assertEquals("aabc", trie.getRoot().find("aabc").fullPath());
+    }
+
+    @RepeatedTest(10)
+    void autocomplete() throws IOException {
+        val ql = new QuestionLoader();
+
+        val trie = ql.getTrie();
+        assertNotNull(trie);
+
+        val query = "Who is played by M. ";
+        val results = new ArrayList<Map<String, String>>();
+        val suggestions = ql.autocomplete(query, results, 20, 5);
+        assertNotNull(suggestions);
+        assertFalse(suggestions.isEmpty());
     }
 }

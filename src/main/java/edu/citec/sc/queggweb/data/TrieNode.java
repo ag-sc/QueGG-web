@@ -17,7 +17,7 @@ public class TrieNode<T> {
     }
 
     @JsonIgnore
-    @Getter @Setter
+    @Getter
     private TrieNode<T> parent;
 
     @Getter @Setter
@@ -39,6 +39,13 @@ public class TrieNode<T> {
         return children.size() == 0;
     }
 
+    private String fullPathCache = null;
+
+    public void setParent(TrieNode<T> parent) {
+        this.parent = parent;
+        this.fullPathCache = null;
+    }
+
     public String pathPrefix() {
         val parts = new ArrayList<String>();
         TrieNode<T> cur = this.parent;
@@ -51,6 +58,9 @@ public class TrieNode<T> {
     }
 
     public String fullPath() {
+        if (fullPathCache != null) {
+            return fullPathCache;
+        }
         val parts = new ArrayList<String>();
         TrieNode<T> cur = this;
         while (cur != null) {
@@ -58,7 +68,8 @@ public class TrieNode<T> {
             cur = cur.parent;
         }
         Collections.reverse(parts);
-        return String.join("", parts);
+        fullPathCache = String.join("", parts);
+        return fullPathCache;
     }
 
     public TrieNode(TrieNode<T> parent, String path, T data) {
@@ -78,37 +89,44 @@ public class TrieNode<T> {
                 '}';
     }
 
-    public TrieNode<T> completer(String query) {
+    public TrieNode<T> find(String path) {
+        return find(path, false);
+    }
+
+    public TrieNode<T> find(String path, boolean caseInsensitive) {
         if (this.isLeaf()) {
             return this;
         }
 
+        if (caseInsensitive) {
+            path = path.toLowerCase();
+        }
 
-        final String myPath = this.getPath().toLowerCase();
-        int commonPrefixLength = getCommonPrefixLength(myPath, query);
+        // final String myPath = this.getPath();
+        int commonPrefixLength = getCommonPrefixLength(fullPath(), path, caseInsensitive);
         if (commonPrefixLength == 0 && !this.isRoot()) {
             return this;
         }
+
         /* if (commonPrefixLength == 0) {
             return this;
         } else if (commonPrefixLength == myPath.length()) { */
         // descend into child nodes
-        final String remainder = query.substring(commonPrefixLength);
         TrieNode<T> bestChildMatch = null;
         int bestChildMatchCommonLength = 0;
 
         if (this.children != null) {
             for (TrieNode<T> child: this.children) {
-                TrieNode<T> subtreeMatch = child.find(remainder);
+                TrieNode<T> subtreeMatch = child.find(path, caseInsensitive);
                 if (bestChildMatch == null) {
                     bestChildMatch = subtreeMatch;
-                    bestChildMatchCommonLength = getCommonPrefixLength(bestChildMatch.fullPath().toLowerCase(), query);
+                    bestChildMatchCommonLength = getCommonPrefixLength(bestChildMatch.fullPath(), path, caseInsensitive);
                     continue;
                 }
-                if (bestChildMatchCommonLength < getCommonPrefixLength(subtreeMatch.fullPath().toLowerCase(), query)) {
+                if (bestChildMatchCommonLength < getCommonPrefixLength(subtreeMatch.fullPath(), path, caseInsensitive)) {
                     // System.out.println(subtreeMatch.fullPath() + " is a better match than " + bestChildMatch.fullPath());
                     bestChildMatch = subtreeMatch;
-                    bestChildMatchCommonLength = getCommonPrefixLength(bestChildMatch.fullPath().toLowerCase(), query);
+                    bestChildMatchCommonLength = getCommonPrefixLength(bestChildMatch.fullPath(), path, caseInsensitive);
                 }
             }
         }
@@ -121,46 +139,11 @@ public class TrieNode<T> {
         return bestChildMatch != null ? bestChildMatch : this;
     }
 
-    public TrieNode<T> find(String path) {
-        if (this.isLeaf()) {
-            return this;
+    private int getCommonPrefixLength(final String pathA, final String pathB, boolean caseInsensitive) {
+        if (caseInsensitive) {
+            return getCommonPrefixLength(pathA.toLowerCase(), pathB.toLowerCase());
         }
-
-        // final String myPath = this.getPath();
-        int commonPrefixLength = getCommonPrefixLength(fullPath(), path);
-        if (commonPrefixLength == 0 && !this.isRoot()) {
-            return this;
-        }
-        /* if (commonPrefixLength == 0) {
-            return this;
-        } else if (commonPrefixLength == myPath.length()) { */
-        // descend into child nodes
-        final String remainder = path.substring(commonPrefixLength);
-        TrieNode<T> bestChildMatch = null;
-        int bestChildMatchCommonLength = 0;
-
-        if (this.children != null) {
-            for (TrieNode<T> child: this.children) {
-                TrieNode<T> subtreeMatch = child.find(path);
-                if (bestChildMatch == null) {
-                    bestChildMatch = subtreeMatch;
-                    bestChildMatchCommonLength = getCommonPrefixLength(bestChildMatch.fullPath(), path);
-                    continue;
-                }
-                if (bestChildMatchCommonLength < getCommonPrefixLength(subtreeMatch.fullPath(), path)) {
-                    // System.out.println(subtreeMatch.fullPath() + " is a better match than " + bestChildMatch.fullPath());
-                    bestChildMatch = subtreeMatch;
-                    bestChildMatchCommonLength = getCommonPrefixLength(bestChildMatch.fullPath(), path);
-                }
-            }
-        }
-
-        if (bestChildMatch != null && commonPrefixLength >= bestChildMatchCommonLength) {
-            // no child beats the current node
-            return this;
-        }
-
-        return bestChildMatch != null ? bestChildMatch : this;
+        return getCommonPrefixLength(pathA, pathB);
     }
 
     private int getCommonPrefixLength(final String pathA, final String pathB) {
@@ -250,7 +233,7 @@ public class TrieNode<T> {
         if (this.children == null) {
             this.children = new ArrayList<>();
         }
-        child.parent = this;
+        child.setParent(this);
         this.children.add(child);
     }
 
