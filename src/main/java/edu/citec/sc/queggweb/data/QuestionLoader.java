@@ -107,22 +107,26 @@ public class QuestionLoader {
         final List<TrieNode<Question>> suggestions = new ArrayList<>();
         TrieNode<Question> cur = this.trie.getRoot().find(query, true);
 
-        this.addResults(query, suggestions, results, cur, topN, maxDepth, 0, false);
+        this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false);
+
+        for (TrieNode<Question> suggestion: suggestions) {
+            results.add(createSuggestion(suggestion));
+        }
 
         return suggestions;
     }
 
-    private void addResults(String query, List<TrieNode<Question>> suggestions, List<Map<String, String>> results, TrieNode<Question> cur, int topN, int maxDepth, int curDepth, boolean skipcur) {
-        if (curDepth >= maxDepth) { return; }
-        if (results.size() >= topN) { return; }
+    private void gatherResults(String query, List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, int maxDepth, int curDepth, boolean skipcur) {
+        if (curDepth >= maxDepth) {
+            return;
+        }
+        if (suggestions.size() >= topN) {
+            return;
+        }
 
         if (!skipcur && !cur.isRoot() && !"".equals(cur.fullPath())) {
             if (cur.fullPath().endsWith(" ") || (cur.isLeaf() && !"".equals(query))) {
-                if (cur.fullPath().toLowerCase().startsWith(query.toLowerCase())) {
-                    if (addSuggestion(results, createSuggestion(cur), topN)) {
-                        suggestions.add(cur);
-                    }
-                }
+                addSuggestion(suggestions, cur, topN, query);
             }
         }
 
@@ -132,28 +136,26 @@ public class QuestionLoader {
 
         for (TrieNode<Question> child: cur.getChildren()) {
             if (child.fullPath().endsWith(" ") || (child.isLeaf() && !"".equals(query))) {
-                if (child.fullPath().toLowerCase().startsWith(query.toLowerCase())) {
-                    if (addSuggestion(results, createSuggestion(child),topN)) {
-                        suggestions.add(child);
-                    }
-                }
+                addSuggestion(suggestions, child, topN, query);
             }
         }
+
         for (TrieNode<Question> child: cur.getChildren()) {
-            addResults(query, suggestions, results, child, topN, maxDepth, curDepth+1, true);
+            gatherResults(query, suggestions, child, topN, maxDepth, curDepth+1, true);
         }
+
     }
 
+    private void addSuggestion(List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, String query) {
+        if (suggestions.size() >= topN) { return; }
+        if (!cur.fullPath().toLowerCase().startsWith(query.toLowerCase())) { return; }
 
-    private boolean addSuggestion(List<Map<String, String>> results, Map<String, String> suggestion, int topN) {
-        if (results.size() >= topN) { return false; }
-        for (Map<String, String> result: results) {
-            if (result == null) continue;
-            if (result.getOrDefault("text", "").equals(suggestion.getOrDefault("text", ""))) {
-                return false;
+        for (TrieNode<Question> other: suggestions) {
+            if (other.fullPath().equals(cur.fullPath())) {
+                return;
             }
         }
-        results.add(suggestion);
-        return true;
+
+        suggestions.add(cur);
     }
 }

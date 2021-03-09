@@ -42,13 +42,12 @@ public class QueryController {
         result.put("results", results);
         result.put("answer", null);
 
-        if (suggestions.size() == 1 && !"".equals(answer)) {
+        if (!"".equals(answer) && suggestions.size() > 0 && suggestions.get(0).getData() != null) {
             Question question = suggestions.get(0).getData();
             result.put("question", question.getQuestion());
             result.put("answer", question.getAnswer());
             result.put("sparql", question.getSparql());
             executeSparql(result, question.getSparql());
-
         }
 
         return result;
@@ -128,7 +127,7 @@ public class QueryController {
             result.put("sparql-error", null);
         } catch (Exception e) {
             e.printStackTrace();
-            result.put("sparql-error", null);
+            result.put("sparql-result", null);
             result.put("sparql-error", e.toString());
         }
 
