@@ -23,8 +23,13 @@ public class TrieNode<T> {
     @Getter @Setter
     private T data;
 
-    @Getter @Setter
+    @Getter
     private String path;
+
+    public void setPath(String path) {
+        this.path = path;
+        this.fullPathCache = null;
+    }
 
     @Getter
     private List<TrieNode<T>> children = null;
