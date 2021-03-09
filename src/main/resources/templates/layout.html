@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">QueGG Question Answering</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>QueGG</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.3.0/mdb.min.css" integrity="sha512-aQX0wElRuvqZ1bVvsknO9jDXwvVI71vwYLuEDZ8QqMJxPozZPPCCmylpHx4ngmeIz7Bg6FfE4Ay+CfDVFqjy+A==" crossorigin="anonymous" />
+    <link th:rel="stylesheet" th:href="@{/style.css}"/>
+</head>
+<body>
+<div th:replace="fragments/header :: nav"></div>
+
+<div class="container-lg">
+<div id="maincontent" class="col-12" layout:fragment="content">
+    content default
+</div>
+</div>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+<script type="text/javascript" th:inline="javascript">
+/*<![CDATA[*/
+    window.QUERY_URI = /*[[@{/}]]*/;
+    console.log("[query] endpoint:", window.QUERY_URI);
+ /*]]>*/
+</script>
+<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.3.0/mdb.min.js" integrity="sha512-Bbn2GxMX2ePx4if/heU6eS4avbu2ac+V1q2jb4mlh1WofyrKV/vm6/mMWmuzgoHQlxvgg7dPuyTtTZSX/Zgk3Q==" crossorigin="anonymous"></script>
+<script th:src="@{/main.js}"></script>
+</body>
+</html>

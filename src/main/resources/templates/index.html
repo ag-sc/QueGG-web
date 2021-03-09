@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>QA</title>
+</head>
+<body>
+    <div layout:fragment="content" class="container-fluid">
+
+        <form id="query-form" th:action="@{/}" method="get" class="row">
+            <div class="ac_inputgroup input-group input-group-lg">
+                <div class="form-outline form-control">
+                    <input id="q" name="q" type="search" class="form-control" autocomplete="off" />
+                    <label class="form-label" for="q">Query</label>
+                </div>
+                <div id="answer-spinner" class="btn btn-light btn-sm">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <button id="query-button" type="button" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <div class="ac_suggestions list-group">
+            </div>
+
+
+            <div class="row questionrow">
+                <div class="qalabel col-1" style="display:none; border-bottom: 1px solid gray;">Q</div>
+                <div id="question" class="col-9">
+
+            </div></div>
+            <div class="row">
+                <span class="qalabel col-1" style="display:none">A</span>
+                <div id="answer" class="col row">
+
+                </div>
+            </div>
+
+            <div id="sparql-container" class="row">
+                <a id="sparql-toggle" class="btn btn-light btn-sm col-2" data-mdb-toggle="collapse" href="#sparql"
+                        role="button" aria-expanded="false" aria-controls="collapseExample">
+                    Show SPARQL
+                </a>
+            <pre id="sparql" class="collapse">
+            </pre>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

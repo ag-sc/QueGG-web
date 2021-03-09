@@ -1,0 +1,111 @@
+#maincontent {
+    margin-top: 1em;
+}
+
+form#query-form {
+    margin-top: 10rem;
+}
+
+img.navbar-logo {
+    height: 3em;
+}
+
+#query-form > .input-group {
+    padding-left: 0;
+}
+
+#answer-spinner {
+    height: 2.7rem;
+    width: 3rem;
+}
+
+#answer-spinner > .spinner-border {
+    height: 1.2em;
+    width: 1.2em;
+    margin: 0;
+    padding: 0;
+}
+
+#answer > .alert {
+    font-size: 1.0rem;
+    padding: 0.5rem;
+}
+
+.qalabel {
+    font-family: serif;
+    font-size: 1.5em;
+    justify-content: right;
+}
+
+.questionrow {
+    margin-top: 4em;
+}
+
+#question {
+    border-bottom: 1px solid gray;
+}
+
+.card-text {
+    font-size: small;
+    font-weight: regular;
+}
+
+.card {
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 2px 2px rgba(0,0,0,0.2);
+    border: 1px solid gray;
+}
+
+.card-img-top {
+    max-height: 15em;
+    max-width: 10em;
+    display: flex;
+    align-self: center;
+}
+
+#answer {
+    margin-top: 0.2em;
+    margin-bottom: 2em;
+    min-height: 5em;
+    font-size: 1.2rem;
+    color: black;
+}
+
+.ac_suggestions {
+    padding-left: 0.2rem;
+    padding-right: 4rem;
+    z-index: 999;
+}
+
+.ac_suggestions a {
+    color: black;
+    background: white;
+}
+
+.ac_suggestions a:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.ac_suggestions a.list-group-item {
+    padding: 0.1rem 1rem 0.1rem 1rem;
+    font-size: 0.8em;
+}
+
+#sparql-toggle {
+    margin-top: 0.5em;
+    position: relative;
+    margin-left: auto;
+}
+
+#sparql {
+    margin-top: 1em;
+    border: 1px solid gray;
+    padding: 0.5em;
+}
+
+footer {
+    margin-top: 5rem;
+    font-size: small;
+}
