@@ -115,7 +115,6 @@ public class QuestionLoader {
             this.gatherResults(query + " ", suggestions, cur, topN, maxDepth, 0, false, false);
         }
 
-        System.err.println(suggestions.size() + " suggestions before leafs");
         if (suggestions.size() <= 1) {
             this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, true);
             if (extendedBySpace) {
