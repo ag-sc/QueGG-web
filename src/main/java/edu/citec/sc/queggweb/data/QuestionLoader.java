@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -108,8 +109,18 @@ public class QuestionLoader {
         TrieNode<Question> cur = this.trie.getRoot().find(query, true);
 
         this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, false);
+        boolean extendedBySpace = false;
+        if (suggestions.size() == 1 && !query.endsWith(" ")) {
+            extendedBySpace = true;
+            this.gatherResults(query + " ", suggestions, cur, topN, maxDepth, 0, false, false);
+        }
+
+        System.err.println(suggestions.size() + " suggestions before leafs");
         if (suggestions.size() <= 1) {
             this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, true);
+            if (extendedBySpace) {
+                this.gatherResults(query + " ", suggestions, cur, topN, maxDepth, 0, false, true);
+            }
         }
 
         return suggestions;
@@ -123,11 +134,21 @@ public class QuestionLoader {
             return;
         }
 
+        val addedPrefixes = new HashSet<String>();
+        for (TrieNode<Question> suggestion: suggestions) {
+            if (suggestion.isLeaf()) {
+                continue;
+            }
+            if (suggestion.fullPath().length() > query.length()) {
+                addedPrefixes.add(suggestion.fullPath());
+            }
+        }
+
         val isRootQuery = "".equals(query);
 
         if (!skipcur && !cur.isRoot() && !"".equals(cur.fullPath())) {
             if (cur.fullPath().endsWith(" ") || (cur.isLeaf() && !isRootQuery)) {
-                addSuggestion(suggestions, cur, topN, query, leafs);
+                addSuggestion(addedPrefixes, suggestions, cur, topN, query, leafs);
             }
         }
 
@@ -137,7 +158,7 @@ public class QuestionLoader {
 
         for (TrieNode<Question> child: cur.getChildren()) {
             if (child.fullPath().endsWith(" ") || (child.isLeaf() && !isRootQuery)) {
-                addSuggestion(suggestions, child, topN, query, leafs);
+                addSuggestion(addedPrefixes, suggestions, child, topN, query, leafs);
             }
         }
 
@@ -147,7 +168,7 @@ public class QuestionLoader {
 
     }
 
-    private void addSuggestion(List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, String query, boolean leafs) {
+    private void addSuggestion(HashSet<String> addedPrefixes, List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, String query, boolean leafs) {
         if (suggestions.size() >= topN) { return; }
         if (!cur.fullPath().toLowerCase().startsWith(query.toLowerCase())) { return; }
 
@@ -164,6 +185,12 @@ public class QuestionLoader {
             } else {
                 if(other.fullPath().equals(cur.fullPath())) {
                     return;
+                }
+                // check if this leaf is covered by a non-leaf node that was already suggested
+                for (String prefix: addedPrefixes) {
+                    if (cur.fullPath().startsWith(prefix)) {
+                        return;
+                    }
                 }
             }
         }
