@@ -103,20 +103,25 @@ public class QuestionLoader {
         return result;
     }
 
-    public List<TrieNode<Question>> autocomplete(String query, List<Map<String, String>> results, int topN, int maxDepth) {
-        final List<TrieNode<Question>> suggestions = new ArrayList<>();
-        TrieNode<Question> cur = this.trie.getRoot().find(query, true);
-
-        this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false);
-
+    public List<Map<String, String>> suggestionsToResults(List<TrieNode<Question>> suggestions) {
+        val results = new ArrayList<Map<String, String>>();
         for (TrieNode<Question> suggestion: suggestions) {
             results.add(createSuggestion(suggestion));
         }
+        return results;
+    }
+
+    public List<TrieNode<Question>> autocomplete(String query, int topN, int maxDepth) {
+        final List<TrieNode<Question>> suggestions = new ArrayList<>();
+        TrieNode<Question> cur = this.trie.getRoot().find(query, true);
+
+        this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, false);
+        this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, true);
 
         return suggestions;
     }
 
-    private void gatherResults(String query, List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, int maxDepth, int curDepth, boolean skipcur) {
+    private void gatherResults(String query, List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, int maxDepth, int curDepth, boolean skipcur, boolean leafs) {
         if (curDepth >= maxDepth) {
             return;
         }
@@ -126,7 +131,7 @@ public class QuestionLoader {
 
         if (!skipcur && !cur.isRoot() && !"".equals(cur.fullPath())) {
             if (cur.fullPath().endsWith(" ") || (cur.isLeaf() && !"".equals(query))) {
-                addSuggestion(suggestions, cur, topN, query);
+                addSuggestion(suggestions, cur, topN, query, leafs);
             }
         }
 
@@ -136,23 +141,34 @@ public class QuestionLoader {
 
         for (TrieNode<Question> child: cur.getChildren()) {
             if (child.fullPath().endsWith(" ") || (child.isLeaf() && !"".equals(query))) {
-                addSuggestion(suggestions, child, topN, query);
+                addSuggestion(suggestions, child, topN, query, leafs);
             }
         }
 
         for (TrieNode<Question> child: cur.getChildren()) {
-            gatherResults(query, suggestions, child, topN, maxDepth, curDepth+1, true);
+            gatherResults(query, suggestions, child, topN, maxDepth, curDepth+1, true, leafs);
         }
 
     }
 
-    private void addSuggestion(List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, String query) {
+    private void addSuggestion(List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, String query, boolean leafs) {
         if (suggestions.size() >= topN) { return; }
         if (!cur.fullPath().toLowerCase().startsWith(query.toLowerCase())) { return; }
 
         for (TrieNode<Question> other: suggestions) {
-            if (other.fullPath().equals(cur.fullPath())) {
+            if (other.equals(cur)) {
                 return;
+            }
+            if (!leafs) {
+                String oPath = other.fullPath();
+                String cPath = cur.fullPath();
+                if (cPath.length() > oPath.length() && cPath.startsWith(oPath)) {
+                    return;
+                }
+            } else {
+                if(other.fullPath().equals(cur.fullPath())) {
+                    return;
+                }
             }
         }
 

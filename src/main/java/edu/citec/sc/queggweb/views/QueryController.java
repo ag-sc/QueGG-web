@@ -35,9 +35,9 @@ public class QueryController {
 
         result.put("query", query);
         result.put("question_count", questions.size());
-        List<Map<String, String>> results = new ArrayList<>();
 
-        val suggestions = questions.autocomplete(query, results, 20, 5);
+        val suggestions = questions.autocomplete(query,20, 5);
+        val results = questions.suggestionsToResults(suggestions);
 
         result.put("results", results);
         result.put("answer", null);
