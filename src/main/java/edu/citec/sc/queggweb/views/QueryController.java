@@ -42,6 +42,10 @@ public class QueryController {
         result.put("results", results);
         result.put("answer", null);
 
+        if (suggestions.size() > 0 && null != suggestions.get(0).getData()) {
+            answer = "true";
+        }
+
         if (!"".equals(answer) && suggestions.size() > 0 && suggestions.get(0).getData() != null) {
             Question question = suggestions.get(0).getData();
             result.put("question", question.getQuestion());
@@ -86,11 +90,13 @@ public class QueryController {
                 QuerySolution row = rs.nextSolution();
                 for (String rvar: rs.getResultVars()) {
                     val rval = row.get(rvar) != null ? row.get(rvar).toString() : null;
+
                     result.put(rvar, rval);
                 }
             }
 
             result.put("result_type", "resource_meta");
+            postprocessResolved(result, resource);
             return result;
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,6 +147,7 @@ public class QueryController {
             }
             val resolved = resourceSparql(resource);
             if (resolved != null) {
+                //postprocessResolved(resolved);
                 rsmap.add(0, resolved);
             } else {
                 Map<String, String> tmp = new HashMap<>();
@@ -149,6 +156,39 @@ public class QueryController {
             }
         }
 
+        result.put("sparql-result", rsmap);
+    }
+
+    private void postprocessResolved(Map<String, String> resolved, String oresource) {
+        if(resolved.getOrDefault("elabel", null) == null) {
+            String elabel = oresource.replace("http://dbpedia.org/resource/", "").replace("_", " ");
+            elabel = elabel.trim();
+            if (elabel.startsWith("<")) {
+                elabel = elabel.substring(1);
+            }
+            if (elabel.endsWith(">")) {
+                elabel = elabel.substring(0, elabel.length() - 1);
+            }
+            resolved.put("elabel", elabel);
+        }
+
+        if (resolved.containsKey("etype") && resolved.get("etype") != null) {
+            String etype = resolved.get("etype");
+            etype = etype.replace("http://www.w3.org/2002/07/owl#", "owl:");
+            etype = etype.replace("http://dbpedia.org/resource/", "dbr:");
+            if (etype.contains("#")) {
+                val parts = etype.split("#");
+                etype = parts[parts.length - 1];
+            }
+            if (etype.contains("/")) {
+                val parts = etype.split("/");
+                etype = parts[parts.length - 1];
+            }
+            if ("owl:Thing".equals(etype)) {
+                etype = null;
+            }
+            resolved.put("etype", etype);
+        }
     }
 
     private String extractResource(String sparql) {

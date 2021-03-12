@@ -44,13 +44,23 @@ function setupAutoComplete(input) {
 
         targetList.innerHTML = "";
         results.forEach((result, resultidx) => {
-            var a = document.createElement('a');
-            var linkText = document.createTextNode(result.text);
+            let a = document.createElement('a');
+            let nodeText = result.text;
+            if (!result.leaf) {
+                nodeText += "…"
+            }
+            let linkText = document.createTextNode(nodeText);
             a.appendChild(linkText);
+            a.dataset.suggestion = result.text;
             a.dataset.resultidx = resultidx;
             a.classList.add("list-group-item");
             if (resultidx === 0) {
                 a.classList.add("active");
+            }
+            if (result.leaf) {
+                a.classList.add("ac_leafnode");
+            } else {
+                a.classList.add("ac_branchnode");
             }
 
             a.addEventListener("keydown", (evt) => {
@@ -98,6 +108,7 @@ function setupAutoComplete(input) {
 
                 if (answer['elabel']) {
                     let elabel = answer['elabel'];
+
                     if (elabel.indexOf("@") > -1) {
                         elabel = elabel.substring(0, elabel.indexOf("@"));
                     }
@@ -110,12 +121,20 @@ function setupAutoComplete(input) {
                     cardTitle.textContent = elabel;
                     answerBody.appendChild(cardTitle);
                     valid_card = true;
+
+                    let etype = answer["etype"];
+                    if (etype) {
+                        const etypeElem = document.createElement("div");
+                        etypeElem.classList.add("ac_etype");
+                        etypeElem.textContent = etype;
+                        answerContainer.appendChild(etypeElem);
+                    }
                 }
 
                 if (answer['eabstract']) {
                     const abstract = document.createElement("p");
                     abstract.classList.add("card-text");
-                    abstract.textContent = answer['eabstract'].substring(0, 100) + "..."
+                    abstract.textContent = answer['eabstract'].replaceAll("\\\"", "\"").substring(0, 100) + "..."
                     answerBody.appendChild(abstract);
                     valid_card = true;
                 }
@@ -136,6 +155,8 @@ function setupAutoComplete(input) {
                 }
             } else {
                 const answerContainer = document.createElement("div");
+                answerContainer.classList.add("ac_literal_answer");
+
                 let answerContent = "";
                 for (const key of Object.keys(answer)) {
                     let value = answer[key];
@@ -171,7 +192,7 @@ function setupAutoComplete(input) {
     async function fetchAnswer(for_question) {
         console.log(for_question);
         if (!for_question) { return; }
-        if (for_question.type !== 'leaf') { return; }
+        if (!for_question.leaf) { return; }
 
         const query_uri = new URL(window.location.protocol + "//" + window.location.host + window.QUERY_URI + "query");
         query_uri.searchParams.append("q", for_question.text);
@@ -203,6 +224,8 @@ function setupAutoComplete(input) {
         const res_data = await res.json();
 
         answerDiv.innerHTML = "";
+
+        // TODO separate function to render answer data
 
         // res_data.sparql
         if (res_data['sparql-error']) {
@@ -265,6 +288,7 @@ function setupAutoComplete(input) {
                         });
         console.log("[query-res]", res_data.results);
         populateResultList(res_data.results);
+
         if (res_data.results && res_data.results.length === 1) {
             fetchAnswer(res_data.results[0]);
         }
@@ -306,10 +330,10 @@ function setupAutoComplete(input) {
         const active_idx = getActiveSuggestionIndex();
         const suggested_text = getSuggestions()[active_idx];
 
-        if (suggested_text && suggested_text.textContent) {
-            console.log("[input-update] input:", input.value, "suggested:", suggested_text.textContent, "prev:", AUTOCOMPLETE_CONFIG.latest_query);
-            input.value = suggested_text.textContent;
-            input.setSelectionRange(manual_length, suggested_text.textContent.length);
+        if (suggested_text && suggested_text.dataset.suggestion) {
+            console.log("[input-update] input:", input.value, "suggested:", suggested_text.dataset.suggestion, "prev:", AUTOCOMPLETE_CONFIG.latest_query);
+            input.value = suggested_text.dataset.suggestion;
+            input.setSelectionRange(manual_length, suggested_text.dataset.suggestion.length);
         }
     }
 

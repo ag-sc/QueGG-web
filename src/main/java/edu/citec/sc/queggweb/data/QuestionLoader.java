@@ -3,6 +3,7 @@ package edu.citec.sc.queggweb.data;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderHeaderAware;
+import edu.citec.sc.queggweb.views.AutocompleteSuggestion;
 import lombok.Getter;
 import lombok.val;
 import org.springframework.context.annotation.Scope;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -95,18 +95,10 @@ public class QuestionLoader {
         return this.loaded;
     }
 
-    private Map<String, String> createSuggestion(TrieNode<Question> cur) {
-        val result = new HashMap<String, String>();
-        result.put("type", cur.isLeaf() ? "leaf" : "node");
-        result.put("text", cur.fullPath());
-        result.put("size", Integer.toString(cur.size()));
-        return result;
-    }
-
-    public List<Map<String, String>> suggestionsToResults(List<TrieNode<Question>> suggestions) {
-        val results = new ArrayList<Map<String, String>>();
+    public List<AutocompleteSuggestion> suggestionsToResults(List<TrieNode<Question>> suggestions) {
+        val results = new ArrayList<AutocompleteSuggestion>();
         for (TrieNode<Question> suggestion: suggestions) {
-            results.add(createSuggestion(suggestion));
+            results.add(new AutocompleteSuggestion(suggestion));
         }
         return results;
     }
@@ -116,7 +108,9 @@ public class QuestionLoader {
         TrieNode<Question> cur = this.trie.getRoot().find(query, true);
 
         this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, false);
-        this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, true);
+        if (suggestions.size() <= 1) {
+            this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, true);
+        }
 
         return suggestions;
     }
@@ -129,8 +123,10 @@ public class QuestionLoader {
             return;
         }
 
+        val isRootQuery = "".equals(query);
+
         if (!skipcur && !cur.isRoot() && !"".equals(cur.fullPath())) {
-            if (cur.fullPath().endsWith(" ") || (cur.isLeaf() && !"".equals(query))) {
+            if (cur.fullPath().endsWith(" ") || (cur.isLeaf() && !isRootQuery)) {
                 addSuggestion(suggestions, cur, topN, query, leafs);
             }
         }
@@ -140,7 +136,7 @@ public class QuestionLoader {
         }
 
         for (TrieNode<Question> child: cur.getChildren()) {
-            if (child.fullPath().endsWith(" ") || (child.isLeaf() && !"".equals(query))) {
+            if (child.fullPath().endsWith(" ") || (child.isLeaf() && !isRootQuery)) {
                 addSuggestion(suggestions, child, topN, query, leafs);
             }
         }
