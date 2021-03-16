@@ -331,6 +331,10 @@ function setupAutoComplete(input) {
         const suggested_text = getSuggestions()[active_idx];
 
         if (suggested_text && suggested_text.dataset.suggestion) {
+            if (dontforce && input.value && !suggested_text.dataset.suggestion.toLowerCase().startsWith(input.value.toLowerCase())) {
+                console.log("[input-update-suppressed] input:", input.value, "suggested:", suggested_text.dataset.suggestion, "prev:", AUTOCOMPLETE_CONFIG.latest_query);
+                return;
+            }
             console.log("[input-update] input:", input.value, "suggested:", suggested_text.dataset.suggestion, "prev:", AUTOCOMPLETE_CONFIG.latest_query);
             input.value = suggested_text.dataset.suggestion;
             input.setSelectionRange(manual_length, suggested_text.dataset.suggestion.length);
@@ -371,6 +375,9 @@ function setupAutoComplete(input) {
 
     function keyHandler(evt) {
         if (evt.which === 8) { // backspace
+            if (input.selectionStart > 1) {
+                input.selectionStart = input.selectionStart - 1;
+            }
             AUTOCOMPLETE_CONFIG.suppress_next = true;
             AUTOCOMPLETE_CONFIG.latest_query = input.value;
             AUTOCOMPLETE_CONFIG.sent_latest = false;

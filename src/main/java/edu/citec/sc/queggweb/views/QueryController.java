@@ -1,5 +1,8 @@
 package edu.citec.sc.queggweb.views;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
 import edu.citec.sc.queggweb.data.Question;
 import edu.citec.sc.queggweb.data.QuestionLoader;
 import lombok.val;
@@ -18,6 +21,13 @@ import java.util.Map;
 
 @RestController
 public class QueryController {
+
+    private Cache<String, Map<String, String>> resourceCache = CacheBuilder.newBuilder()
+            .maximumSize(5000)
+            .build();
+    private Cache<String, Map<String, Object>> answerCache = CacheBuilder.newBuilder()
+            .maximumSize(5000)
+            .build();
 
     @Autowired
     private QuestionLoader questions;
@@ -58,6 +68,11 @@ public class QueryController {
     }
 
     private Map<String, String> resourceSparql(String resource) {
+        val cached = resourceCache.getIfPresent(resource);
+        if (cached != null) {
+            return cached;
+        }
+
         String sparql = "PREFIX      rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "PREFIX     rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
                 "SELECT ?etype ?elabel ?elink ?eabstract ?ethumbnail WHERE {\n" +
@@ -97,6 +112,8 @@ public class QueryController {
 
             result.put("result_type", "resource_meta");
             postprocessResolved(result, resource);
+
+            resourceCache.put(resource, result);
             return result;
         } catch (Exception e) {
             e.printStackTrace();
@@ -106,6 +123,14 @@ public class QueryController {
     }
 
     private void executeSparql(Map<String, Object> result, String sparql) {
+        val cached = answerCache.getIfPresent(sparql);
+        if (cached != null) {
+            for (String k: cached.keySet()) {
+                result.put(k, cached.get(k));
+            }
+            return;
+        }
+
         Query query = QueryFactory.create(sparql);
         List<String> resolveResources =new ArrayList<>();
         List<Map<String, String>> rsmap = new ArrayList<>();
@@ -157,6 +182,8 @@ public class QueryController {
         }
 
         result.put("sparql-result", rsmap);
+
+        answerCache.put(sparql, result);
     }
 
     private void postprocessResolved(Map<String, String> resolved, String oresource) {

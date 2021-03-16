@@ -84,6 +84,11 @@
 			<type>pom</type>
 			<version>3.14.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>30.1-jre</version>
+		</dependency>
 	</dependencies>
 
 	<build>
