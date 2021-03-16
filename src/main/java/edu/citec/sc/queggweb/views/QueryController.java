@@ -2,7 +2,6 @@ package edu.citec.sc.queggweb.views;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.LoadingCache;
 import edu.citec.sc.queggweb.data.Question;
 import edu.citec.sc.queggweb.data.QuestionLoader;
 import lombok.val;
@@ -13,7 +12,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.HandlerInterceptor;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
