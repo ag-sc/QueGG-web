@@ -133,7 +133,16 @@ public class QueryController {
             return;
         }
 
-        Query query = QueryFactory.create(sparql);
+        Query query = null;
+        try {
+            query = QueryFactory.create(sparql);
+        } catch (QueryParseException qpe) {
+            System.err.println("QueryParseException: query: " + sparql);
+            qpe.printStackTrace();
+            result.put("sparql-result", null);
+            result.put("sparql-error", qpe.toString());
+            return;
+        }
         List<String> resolveResources =new ArrayList<>();
         List<Map<String, String>> rsmap = new ArrayList<>();
 
