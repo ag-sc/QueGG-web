@@ -292,6 +292,12 @@ function setupAutoComplete(input) {
         if (res_data.results && res_data.results.length === 1) {
             fetchAnswer(res_data.results[0]);
         }
+        if (res_data.results && res_data.results.length > 0) {
+        console.log("CHECK", res_data.results[0]);
+            if (res_data.results[0].answerable) {
+                fetchAnswer(res_data.results[0]);
+            }
+        }
 
         const ac_input_classes = document.querySelectorAll(".ac_inputgroup")[0].classList
         ac_input_classes.add("ac_suggestions_active");
