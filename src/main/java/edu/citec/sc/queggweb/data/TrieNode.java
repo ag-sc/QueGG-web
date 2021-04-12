@@ -7,9 +7,14 @@ import lombok.val;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class TrieNode<T> {
+    public boolean hasChildren() {
+        return getChildren() != null && getChildren().size() > 0;
+    }
+
     public static final class DuplicateInsertException extends Exception {
         public DuplicateInsertException(String duplicatePath) {
             super("Duplicate path: " + duplicatePath);
@@ -51,14 +56,22 @@ public class TrieNode<T> {
         this.fullPathCache = null;
     }
 
-    public String pathPrefix() {
+    public List<String> pathParts(boolean includeSelf) {
         val parts = new ArrayList<String>();
+        if (includeSelf) {
+            parts.add(this.path);
+        }
         TrieNode<T> cur = this.parent;
         while (cur != null) {
             parts.add(cur.path);
             cur = cur.parent;
         }
         Collections.reverse(parts);
+        return parts;
+    }
+
+    public String pathPrefix() {
+        val parts = pathParts(false);
         return String.join("", parts);
     }
 

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -97,11 +98,54 @@ public class QuestionLoader {
     }
 
     public List<AutocompleteSuggestion> suggestionsToResults(List<TrieNode<Question>> suggestions) {
+        val sparqlResourceLabels = this.gatherSparqlResourceLabels(suggestions);
         val results = new ArrayList<AutocompleteSuggestion>();
-        for (TrieNode<Question> suggestion: suggestions) {
-            results.add(new AutocompleteSuggestion(suggestion));
+        for (TrieNode<Question> node: suggestions) {
+            AutocompleteSuggestion suggestion = new AutocompleteSuggestion(node);
+            if (node.isLeaf()) {
+                suggestion.align(getSparqlResourceLabel(node.getData() != null ? node.getData().getSparql() : null));
+            } else {
+                suggestion.align(sparqlResourceLabels);
+            }
+            results.add(suggestion);
         }
         return results;
+    }
+
+    private String getSparqlResourceLabel(String sparql) {
+        if (sparql == null)
+            return null;
+        if (!sparql.contains("<http://dbpedia.org/resource/")) {
+            return null;
+        }
+        sparql = sparql.substring(sparql.indexOf("<http://dbpedia.org/resource/") + "<http://dbpedia.org/resource/".length());
+        if (!sparql.contains(">")) {
+            return null;
+        }
+        sparql = sparql.substring(0, sparql.indexOf(">"));
+        try {
+            sparql = URLDecoder.decode(sparql, "UTF-8");
+        } catch (UnsupportedEncodingException ignored) {}
+        sparql = sparql.replace("_", " ").trim();
+
+        if (sparql.length() == 0) return null;
+        return sparql;
+    }
+
+    private List<String> gatherSparqlResourceLabels(List<TrieNode<Question>> suggestions) {
+        List<String> labels = new ArrayList<>();
+
+        for (TrieNode<Question> node: suggestions) {
+            Question data = node.getData();
+            if (node.getData() == null)
+                continue;
+            String label = getSparqlResourceLabel(data.getSparql());
+            if (label != null) {
+                labels.add(label);
+            }
+        }
+
+        return labels;
     }
 
     public List<TrieNode<Question>> autocomplete(String query, int topN, int maxDepth) {
@@ -162,7 +206,7 @@ public class QuestionLoader {
         }
 
         for (TrieNode<Question> child: cur.getChildren()) {
-            gatherResults(query, suggestions, child, topN, maxDepth, curDepth+1, true, leafs);
+            gatherResults(query, suggestions, child, topN, maxDepth, curDepth+2, true, leafs);
         }
 
     }

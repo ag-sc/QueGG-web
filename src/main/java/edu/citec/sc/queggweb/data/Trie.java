@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 public class Trie<T> {
     @Getter @Setter

@@ -49,8 +49,28 @@ function setupAutoComplete(input) {
             if (!result.leaf) {
                 nodeText += "…"
             }
-            let linkText = document.createTextNode(nodeText);
-            a.appendChild(linkText);
+            if (result.entityOnset > -1 && result.entityOffset > -1) {
+                let text_prefix = document.createElement("span");
+                text_prefix.textContent = result.text.substring(0, result.entityOnset);
+                a.appendChild(text_prefix);
+                let text_entity = document.createElement("span");
+                text_entity.textContent = result.text.substring(result.entityOnset, result.entityOffset);
+                text_entity.classList.add("emarker");
+                a.appendChild(text_entity);
+
+                if (result.leaf) {
+                    let text_suffix = document.createElement("span");
+                    if (result.leaf) {
+                        text_suffix.textContent = result.text.substring(result.entityOffset);
+                    } else {
+                        text_suffix.textContent = "…";
+                    }
+                    a.appendChild(text_suffix);
+                }
+            } else {
+                let linkText = document.createTextNode(nodeText);
+                a.appendChild(linkText);
+            }
             a.dataset.suggestion = result.text;
             a.dataset.resultidx = resultidx;
             a.classList.add("list-group-item");
@@ -189,7 +209,7 @@ function setupAutoComplete(input) {
         }
     }
 
-    async function fetchAnswer(for_question) {
+    async function fetchAnswer(for_question, update_input) {
         console.log(for_question);
         if (!for_question) { return; }
         if (!for_question.leaf) { return; }
@@ -290,12 +310,11 @@ function setupAutoComplete(input) {
         populateResultList(res_data.results);
 
         if (res_data.results && res_data.results.length === 1) {
-            fetchAnswer(res_data.results[0]);
+            fetchAnswer(res_data.results[0], true);
         }
         if (res_data.results && res_data.results.length > 0) {
-        console.log("CHECK", res_data.results[0]);
             if (res_data.results[0].answerable) {
-                fetchAnswer(res_data.results[0]);
+                fetchAnswer(res_data.results[0], false);
             }
         }
 

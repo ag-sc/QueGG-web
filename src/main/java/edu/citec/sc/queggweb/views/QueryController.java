@@ -2,8 +2,7 @@ package edu.citec.sc.queggweb.views;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import edu.citec.sc.queggweb.data.Question;
-import edu.citec.sc.queggweb.data.QuestionLoader;
+import edu.citec.sc.queggweb.data.*;
 import lombok.val;
 import org.apache.jena.query.*;
 import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
@@ -12,10 +11,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +65,92 @@ public class QueryController {
         }
 
         return result;
+    }
+
+    private List<String> gatherSparqlResourceLabels(List<TrieNode<Question>> suggestions) {
+        List<String> labels = new ArrayList<>();
+
+        for (TrieNode<Question> node: suggestions) {
+            Question data = node.getData();
+            if (node.getData() == null)
+                continue;
+            String sparql = data.getSparql();
+            if (sparql == null)
+                continue;
+            if (!sparql.contains("<http://dbpedia.org/resource/")) {
+                continue;
+            }
+            sparql = sparql.substring(sparql.indexOf("<http://dbpedia.org/resource/") + "<http://dbpedia.org/resource/".length());
+            if (!sparql.contains(">")) {
+                continue;
+            }
+            sparql = sparql.substring(0, sparql.indexOf(">"));
+            try {
+                sparql = URLDecoder.decode(sparql, "UTF-8");
+            } catch (UnsupportedEncodingException ignored) {}
+            sparql = sparql.replace("_", " ").trim();
+
+            if (sparql.length() == 0) continue;
+
+            labels.add(sparql);
+        }
+
+        return labels;
+    }
+
+    private void markEntities(String query, List<AutocompleteSuggestion> results) {
+        val extendedSuggestions = questions.autocomplete(query,100, 5);
+        val extendedResults = questions.suggestionsToResults(extendedSuggestions);
+
+        val prefixTrie = new Trie<String>();
+        val suffixTrie = new Trie<String>();
+        val prefix = query.toLowerCase().trim();
+
+        for (AutocompleteSuggestion suggestion: extendedResults) {
+            val suggestionText = suggestion.getText();
+            val textRemainder = suggestionText.substring(prefix.length()).strip();
+            if (textRemainder.length() == 0) continue;
+            StringBuilder sb = new StringBuilder(textRemainder);
+            System.err.println(suggestionText + " | " + textRemainder);
+            try {
+                suffixTrie.insert(sb.reverse().toString(), textRemainder);
+            } catch (TrieNode.DuplicateInsertException ignored) {}
+            try {
+                prefixTrie.insert(suggestionText, suggestionText);
+            } catch (TrieNode.DuplicateInsertException ignored) {}
+        }
+
+        String shortestSuffix = null;
+
+        TrieNodeVisitor<String> visitor = new TrieNodeVisitor<String>(suffixTrie.getRoot()) {
+            @Override
+            protected void visit(TrieNode<String> node) {
+                if (node == null) return;
+                // leaf nodes can never present a suffix
+                if (!node.isLeaf()) return;
+
+                val pathParts = new ArrayList<TrieNode<String>>();
+                TrieNode<String> current = node;
+                while (current != null) {
+                    pathParts.add(current);
+                    if (current.getParent() != null && current.getParent() != current) {
+                        current = current.getParent();
+                    } else {
+                        current = null;
+                    }
+                }
+
+                for (int i = pathParts.size() - 1; i >= 0; i--) {
+
+                }
+
+                System.err.println(node + " " +  pathParts.toString());
+            }
+        };
+
+        System.err.println(prefixTrie);
+        System.err.println(suffixTrie);
+
     }
 
     private Map<String, String> resourceSparql(String resource) {
