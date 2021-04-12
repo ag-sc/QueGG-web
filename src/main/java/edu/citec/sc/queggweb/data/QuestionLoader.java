@@ -37,6 +37,7 @@ public class QuestionLoader {
             Map<String, String> row;
             while ((row = reader.readMap()) != null) {
                 String question = row.get("question");
+                
                 if (question.trim().startsWith("SELECT ") && question.trim().endsWith("}")) {
                     System.err.println("skipping malformed question: " + question);
                     continue;
