@@ -8,12 +8,31 @@ import lombok.val;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class TrieNode<T> {
     public boolean hasChildren() {
         return getChildren() != null && getChildren().size() > 0;
+    }
+
+    public List<TrieNode<T>> sampleChildren(int n) {
+        if (!hasChildren())
+            return null;
+
+        if (getChildren().size() <= n) {
+            return getChildren();
+        }
+
+        final Random r = ThreadLocalRandom.current();
+        final int childCount = this.children.size();
+
+        for (int pick = 0; pick < getChildren().size(); pick++) {
+            Collections.swap(this.children, pick, r.nextInt(childCount));
+        }
+
+        return this.children.subList(0, n);
     }
 
     public static final class DuplicateInsertException extends Exception {

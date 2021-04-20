@@ -23,6 +23,7 @@ import java.util.concurrent.*;
 @Scope("singleton")
 public class QuestionLoader {
     private static final String CACHE_FILENAME = "/tmp/trie.cache";
+    private final int MAX_CHILD_SAMPLES = 200;
     private int loaded = 0;
 
     @Synchronized
@@ -279,13 +280,17 @@ public class QuestionLoader {
             return;
         }
 
-        for (TrieNode<Question> child: cur.getChildren()) {
+        List<TrieNode<Question>> children = cur.getChildren();
+        if (children.size() > MAX_CHILD_SAMPLES) {
+            children = cur.sampleChildren(MAX_CHILD_SAMPLES);
+        }
+        for (TrieNode<Question> child: children) {
             if (child.fullPath().endsWith(" ") || (child.isLeaf() && !isRootQuery)) {
                 addSuggestion(addedPrefixes, suggestions, child, topN, query, leafs);
             }
         }
 
-        for (TrieNode<Question> child: cur.getChildren()) {
+        for (TrieNode<Question> child: children) {
             gatherResults(query, suggestions, child, topN, maxDepth, curDepth+2, true, leafs);
         }
 
