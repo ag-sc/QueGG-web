@@ -59,6 +59,9 @@ public class AutocompleteSuggestion {
     }
 
     public void align(String resourceLabel) {
+        if (resourceLabel == null)
+            return;
+
         resourceLabel = " " + resourceLabel.trim().toLowerCase().replaceAll("[^a-zA-Z0-9]", " ").trim() + " ";
         val checkText = " " + text.toLowerCase().replaceAll("[^a-zA-Z0-9]", " ") + " ";
         if (!checkText.contains(resourceLabel)) {
