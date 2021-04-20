@@ -20,8 +20,14 @@ public class Trie<T> {
         }
 
         TrieNode<T> closestNode = this.root.find(path);
+        Object lockSubTree = closestNode.getParent() != null ? closestNode.getParent() : this;
+
         // System.err.print("closest: "); System.err.println(closestNode);
-        closestNode.insert(path, data);
+        synchronized (closestNode) {
+            synchronized (lockSubTree) {
+                closestNode.insert(path, data);
+            }
+        }
         //closestNode.split(path)
     }
 
@@ -45,6 +51,10 @@ public class Trie<T> {
     }
     public void dump(boolean hideleafs) {
         TrieNode<T> cur = this.root;
+        if (this.root == null) {
+            System.out.println("[null]");
+            return;
+        }
         this.dump(cur, 0, hideleafs);
     }
 

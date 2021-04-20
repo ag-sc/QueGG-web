@@ -3,6 +3,7 @@ package edu.citec.sc.queggweb.data;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Synchronized;
 import lombok.val;
 
 import java.util.ArrayList;
@@ -22,13 +23,13 @@ public class TrieNode<T> {
     }
 
     @JsonIgnore
-    @Getter
+    @Getter(onMethod_={@Synchronized})
     private TrieNode<T> parent;
 
-    @Getter @Setter
+    @Getter(onMethod_={@Synchronized}) @Setter(onMethod_={@Synchronized})
     private T data;
 
-    @Getter
+    @Getter(onMethod_={@Synchronized})
     private String path;
 
     public void setPath(String path) {
@@ -36,7 +37,7 @@ public class TrieNode<T> {
         this.fullPathCache = null;
     }
 
-    @Getter
+    @Getter(onMethod_={@Synchronized})
     private List<TrieNode<T>> children = null;
 
     @JsonIgnore
@@ -51,6 +52,7 @@ public class TrieNode<T> {
 
     private String fullPathCache = null;
 
+    @Synchronized
     public void setParent(TrieNode<T> parent) {
         this.parent = parent;
         this.fullPathCache = null;
@@ -75,6 +77,7 @@ public class TrieNode<T> {
         return String.join("", parts);
     }
 
+    @Synchronized
     public String fullPath() {
         if (fullPathCache != null) {
             return fullPathCache;
@@ -178,6 +181,7 @@ public class TrieNode<T> {
         return commonPrefixLength;
     }
 
+    @Synchronized
     public void insert(final String fullPath, T data) throws DuplicateInsertException {
         final String myPath = this.getPath();
         final String myFullPath = this.fullPath();
@@ -247,9 +251,10 @@ public class TrieNode<T> {
         }
     }
 
+    @Synchronized
     private void addChild(TrieNode<T> child) {
         if (this.children == null) {
-            this.children = new ArrayList<>();
+            this.children = Collections.synchronizedList(new ArrayList<>());
         }
         child.setParent(this);
         this.children.add(child);

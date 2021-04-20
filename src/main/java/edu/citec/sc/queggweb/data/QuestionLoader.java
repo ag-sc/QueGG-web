@@ -5,16 +5,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderHeaderAware;
 import edu.citec.sc.queggweb.views.AutocompleteSuggestion;
 import lombok.Getter;
+import lombok.Synchronized;
 import lombok.val;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.URLDecoder;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 
 @Component("questions")
 @Scope("singleton")
@@ -22,44 +25,97 @@ public class QuestionLoader {
     private static final String CACHE_FILENAME = "/tmp/trie.cache";
     private int loaded = 0;
 
+    @Synchronized
+    protected int incLoaded() {
+        this.loaded++;
+        return this.loaded;
+    }
+
     @Getter
     Trie<Question> trie = new Trie<>();
 
-    private void loadFromCSV() throws IOException {
+    private class InsertTask implements Runnable {
 
-        try (InputStream is = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream("data/questions.csv")) {
+        private final Trie<Question> trie;
+        private final Question q;
 
-            assert is != null;
+        public InsertTask(Trie<Question> trie, Question q) {
+            this.trie = trie;
+            this.q = q;
+        }
 
-            val in = new BufferedReader(new InputStreamReader(is));
-            val reader = new CSVReaderHeaderAware(in);
-            Map<String, String> row;
-            while ((row = reader.readMap()) != null) {
-                String question = row.get("question");
-                
-                if (question.trim().startsWith("SELECT ") && question.trim().endsWith("}")) {
-                    System.err.println("skipping malformed question: " + question);
-                    continue;
-                }
-
-                String sparql = row.get("sparql");
-                String answer = row.get("answer");
-
-                Question q = new Question(question, sparql, answer);
-                try {
-                    trie.insert(q.getQuestion(), q);
-                } catch (TrieNode.DuplicateInsertException e) {
-                    System.err.println(e.getMessage());
-                }
-                this.loaded++;
-                if (this.loaded % 10000 == 0) {
-                    System.out.println("loaded: " + loaded + " trie size: " + trie.size());
-                }
+        @Override
+        public void run() {
+            try {
+                trie.insert(q.getQuestion(), q);
+            } catch (TrieNode.DuplicateInsertException e) {
+                System.err.println(e.getMessage());
             }
 
-            trie.dump(false);
-            trie.store(CACHE_FILENAME);
+            if (incLoaded() % 10000 == 0) {
+                System.out.println("loaded: " + loaded + " trie size: " + trie.size());
+            }
+        }
+    }
+
+    private void loadFromInputStream(final String streamName, InputStream is) throws IOException {
+        assert is != null;
+
+        int coreCount = Runtime.getRuntime().availableProcessors();
+        int threadCount = coreCount > 2 ? coreCount - 2 : 2;
+
+        val in = new BufferedReader(new InputStreamReader(is));
+        CSVReaderHeaderAware reader = null;
+        try {
+            reader = new CSVReaderHeaderAware(in);
+        } catch (NullPointerException npe) {
+            System.err.println("no header found, skipping stream " + streamName);
+            return;
+        }
+
+        System.err.println("Starting ingest with " + threadCount + " threads");
+        ExecutorService ingestPool = Executors.newFixedThreadPool(threadCount);
+
+        Map<String, String> row;
+        while ((row = reader.readMap()) != null) {
+            String question = row.get("question");
+
+            if (question == null) {
+                throw new RuntimeException("failed to parse " + streamName + ": question is null or header malformed/missing");
+            }
+
+            if (question.trim().startsWith("SELECT ") && question.trim().endsWith("}")) {
+                System.err.println("skipping malformed question: " + question);
+                continue;
+            }
+
+            String sparql = row.get("sparql");
+            String answer = row.get("answer");
+
+            Question q = new Question(question, sparql, answer);
+
+            InsertTask task = new InsertTask(trie, q);
+            ingestPool.submit(task);
+        }
+
+        ingestPool.shutdown();
+        System.out.println("waiting for ingest service to complete");
+
+        try {
+            ingestPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.err.println("ingestion complete (" + threadCount + " threads terminated)");
+        trie.store(CACHE_FILENAME);
+    }
+
+    private void loadFromCSV() throws IOException {
+        try (InputStream is = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream("data/questions.csv")) {
+            loadFromInputStream("resource-stream", is);
+            trie.dump(true);
         }
     }
 
@@ -68,8 +124,31 @@ public class QuestionLoader {
         if (trie.size() == 0) {
             loadFromCSV();
         }
+
+        loadExternalCSVs();
     }
-    
+
+    private void loadExternalCSVs() throws IOException {
+        PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:/tmp/question*.csv");
+
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(Paths.get("/tmp"))) {
+            for (Path child : ds) {
+                if (!Files.isRegularFile(child)) {
+                    continue;
+                }
+                if (matcher.matches(child)) {
+                    try (InputStream is = Files.newInputStream(child, StandardOpenOption.READ)) {
+                        System.err.println("loading " + child + ", trie size: " + trie.size());
+                        loadFromInputStream(child.getFileName().toString(), is);
+                        System.err.println("new trie size: " + trie.size());
+                        trie.store(CACHE_FILENAME);
+                    }
+                }
+            }
+        }
+
+    }
+
     private void loadFromCache() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         File infile = new File(CACHE_FILENAME);

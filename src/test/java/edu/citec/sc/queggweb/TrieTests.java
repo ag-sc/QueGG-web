@@ -238,7 +238,7 @@ public class TrieTests {
 
         val query = "Who is played by M. ";
         val results = new ArrayList<Map<String, String>>();
-        val suggestions = ql.autocomplete(query, 20, 5);
+        val suggestions = ql.autocomplete(query, 20, 4);
 
         assertNotNull(suggestions);
         assertFalse(suggestions.isEmpty());

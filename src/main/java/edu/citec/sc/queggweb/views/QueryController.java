@@ -9,6 +9,7 @@ import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -46,7 +47,7 @@ public class QueryController {
         result.put("query", query);
         result.put("question_count", questions.size());
 
-        val suggestions = questions.autocomplete(query,20, 5);
+        val suggestions = questions.autocomplete(query,20, 4);
         val results = questions.suggestionsToResults(suggestions);
 
         result.put("results", results);
