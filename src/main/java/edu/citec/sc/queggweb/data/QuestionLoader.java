@@ -22,7 +22,18 @@ import java.util.concurrent.*;
 @Component("questions")
 @Scope("singleton")
 public class QuestionLoader {
-    private static final String CACHE_FILENAME = "/tmp/trie.cache";
+    private static final String CACHE_FILENAME = loadCacheFilename();
+
+    private static String loadCacheFilename() {
+        String envValue = System.getenv("QUEGG_TRIECACHE");
+        if (envValue != null && !envValue.equals("")) {
+            return envValue;
+        }
+
+        // default value
+        return "/tmp/trie.cache";
+    }
+
     private final int MAX_CHILD_SAMPLES = 200;
     private int loaded = 0;
 
@@ -129,10 +140,15 @@ public class QuestionLoader {
         loadExternalCSVs();
     }
 
-    private void loadExternalCSVs() throws IOException {
-        PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:/tmp/question*.csv");
+    private int loadExternalCSVs() throws IOException {
+        return loadExternalCSVs("/tmp", "glob:/tmp/question*.csv");
+    }
 
-        try (DirectoryStream<Path> ds = Files.newDirectoryStream(Paths.get("/tmp"))) {
+    public int loadExternalCSVs(String baseDirectory, String globPattern) throws IOException {
+        PathMatcher matcher = FileSystems.getDefault().getPathMatcher(globPattern);
+
+        int prevSize = trie.size();
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(Paths.get(baseDirectory))) {
             for (Path child : ds) {
                 if (!Files.isRegularFile(child)) {
                     continue;
@@ -148,6 +164,7 @@ public class QuestionLoader {
             }
         }
 
+        return trie.size() - prevSize;
     }
 
     private void loadFromCache() throws IOException {
@@ -231,6 +248,13 @@ public class QuestionLoader {
 
     public List<TrieNode<Question>> autocomplete(String query, int topN, int maxDepth) {
         final List<TrieNode<Question>> suggestions = new ArrayList<>();
+
+        if (this.trie == null || this.trie.getRoot() == null) {
+            // no questions loaded into trie yet
+            System.err.println("[warning] autocomplete failed: no data in trie");
+            return suggestions;
+        }
+
         TrieNode<Question> cur = this.trie.getRoot().find(query, true);
 
         this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, false);
