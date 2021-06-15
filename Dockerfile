@@ -9,6 +9,7 @@ RUN cd /source && mvn -B package -DskipTests
 FROM maven:3.8-jdk-11 AS buildconv
 
 RUN git clone --branch extension "https://github.com/fazleh2010/question-grammar-generator.git" /source
+
 #alternative from local directory
 #ADD ./grammar-generator/pom.xml /source/pom.xml
 # ADD ./grammar-generator /source
