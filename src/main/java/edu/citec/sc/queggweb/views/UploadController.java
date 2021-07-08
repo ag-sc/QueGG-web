@@ -1,7 +1,7 @@
 package edu.citec.sc.queggweb.views;
 
+import edu.citec.sc.queggweb.data.EndpointConfiguration;
 import edu.citec.sc.queggweb.data.QuestionLoader;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,13 +11,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.util.Locale;
 
 @Controller
 public class UploadController {
 
     @Autowired
     private QuestionLoader questions;
+
+    @Autowired
+    private EndpointConfiguration endpoint;
 
     private boolean uploadsAllowed() {
         String envFlag = System.getenv().getOrDefault("QUEGG_ALLOW_UPLOADS", "false");
@@ -35,6 +37,7 @@ public class UploadController {
 
     @PostMapping("/import")
     public ResponseEntity<String> handleFileUpload(@RequestParam(value = "file", required = true) MultipartFile file,
+                                                   @RequestParam(value = "config", required = false) MultipartFile config,
                                                    @RequestParam(required=false, defaultValue = "en") String lang,
                                                    @RequestParam(required=false, defaultValue = "10") Integer maxBindingCount,
                                                    @RequestParam(required=false, defaultValue = "nouns") String targetType,
@@ -43,6 +46,23 @@ public class UploadController {
             System.err.println("Upload received but QUEGG_ALLOW_UPLOADS environment variable is not set to 'true'");
 
             return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
+        }
+
+        String responseStatus = "";
+
+        if (config != null && config.getSize() > 0) {
+            File tmpConfig  = new File("/tmp/config_import.json");
+
+            try (OutputStream os = new FileOutputStream(tmpConfig)) {
+                os.write(config.getBytes());
+                responseStatus = "written " + config.getSize() + " bytes (config)\n";
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            endpoint.loadFromFile(tmpConfig);
         }
 
         lang = lang.toUpperCase();
@@ -70,8 +90,6 @@ public class UploadController {
         String tmpFilename = "/tmp/import/" + targetType + "/import." + ("CSV".equals(inputFormat) ? "csv" : "ttl");
         File tmpFile = new File(tmpFilename);
 
-        String responseStatus = "";
-
         try (OutputStream os = new FileOutputStream(tmpFile)) {
             os.write(file.getBytes());
             responseStatus = "written " + file.getSize() + " bytes\n";
@@ -83,7 +101,7 @@ public class UploadController {
 
         responseStatus += "upload ok\n";
 
-        String generatorCommand = "java -jar /app/generator.jar " + lang + " /tmp/import /tmp/generatorout " + maxBindingCount.toString() + " " + inputFormat.toLowerCase();
+        String generatorCommand = "java -jar /app/generator.jar " + lang + " /tmp/import /tmp/generatorout " + maxBindingCount.toString() + " " + inputFormat.toLowerCase() + " " + endpoint.configFileLocation().getAbsolutePath();
         System.err.println("[info] invoking command line: " + generatorCommand);
 
         Runtime run = Runtime.getRuntime();

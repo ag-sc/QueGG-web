@@ -32,6 +32,9 @@ public class QueryController {
     @Autowired
     private QuestionLoader questions;
 
+    @Autowired
+    private EndpointConfiguration endpoint;
+
     @GetMapping("/resource")
     public Map<String, String> resolveResource(@RequestParam(name="r") String resourceName, Model model) {
         return resourceSparql(resourceName);
@@ -75,6 +78,10 @@ public class QueryController {
             if (node.getData() == null)
                 continue;
             String sparql = data.getSparql();
+
+            // TODO extend EndpointConfiguration to make this dynamic
+            // TODO respect prefixes defined in EndpointConfiguration
+
             if (sparql == null)
                 continue;
             if (!sparql.contains("<http://dbpedia.org/resource/")) {
@@ -159,26 +166,16 @@ public class QueryController {
             return cached;
         }
 
-        String sparql = "PREFIX      rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "PREFIX     rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-                "SELECT ?etype ?elabel ?elink ?eabstract ?ethumbnail WHERE {\n" +
-                "    OPTIONAL{ %RES% rdf:type ?etype .}\n" +
-                "    OPTIONAL{ %RES% rdfs:label ?elabel . " +
-                "           FILTER (lang(?elabel) = 'en') }\n" +
-                "    OPTIONAL{ %RES% <http://xmlns.com/foaf/0.1/isPrimaryTopicOf> ?elink . }\n" +
-                "    OPTIONAL{ %RES% <http://dbpedia.org/ontology/abstract> ?eabstract . \n" +
-                "            FILTER (lang(?eabstract) = 'en')\n" +
-                "    }\n" +
-                "    OPTIONAL{ %RES% <http://dbpedia.org/ontology/thumbnail> ?ethumbnail . }\n" +
-                "    \n" +
-                "} LIMIT 1\n";
+        String sparql = endpoint.getPrefixSparql().trim() + "\n";
+        sparql += endpoint.getResourceQuery().trim();
+
         while (sparql.contains("%RES%")) {
             sparql = sparql.replaceAll("%RES%", resource);
         }
         Query query = QueryFactory.create(sparql);
 
         // Remote execution.
-        try ( QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query) ) {
+        try ( QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint.getEndpoint(), query) ) {
             // Set the DBpedia specific timeout.
             ((QueryEngineHTTP)qexec).addParam("timeout", "10000") ;
 

@@ -1,0 +1,12 @@
+{
+    "endpoint": "https://dbpedia.org/sparql",
+    "language": "en",
+    "resourcePrefix": "<http://dbpedia.org/resource/",
+    "resourceSuffix": ">",
+    "prefix": 
+            {
+                "dbo": "http://dbpedia.org/ontology/",
+                "owl": "http://www.w3.org/2002/07/owl/",
+                "xsd": "http://www.w3.org/2001/XMLSchema/"
+            }
+}

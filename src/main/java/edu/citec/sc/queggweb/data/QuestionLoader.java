@@ -7,6 +7,7 @@ import edu.citec.sc.queggweb.views.AutocompleteSuggestion;
 import lombok.Getter;
 import lombok.Synchronized;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,9 @@ import java.util.concurrent.*;
 @Scope("singleton")
 public class QuestionLoader {
     private static final String CACHE_FILENAME = loadCacheFilename();
+
+    @Autowired
+    public EndpointConfiguration endpoint;
 
     private static String loadCacheFilename() {
         String envValue = System.getenv("QUEGG_TRIECACHE");
@@ -213,14 +217,17 @@ public class QuestionLoader {
     private String getSparqlResourceLabel(String sparql) {
         if (sparql == null)
             return null;
-        if (!sparql.contains("<http://dbpedia.org/resource/")) {
+        final String rprefix = endpoint.getResourcePrefix();
+
+        if (!sparql.contains(rprefix)) {
             return null;
         }
-        sparql = sparql.substring(sparql.indexOf("<http://dbpedia.org/resource/") + "<http://dbpedia.org/resource/".length());
-        if (!sparql.contains(">")) {
+        sparql = sparql.substring(sparql.indexOf(rprefix) + rprefix.length());
+
+        if (!sparql.contains(endpoint.getResourceSuffix())) {
             return null;
         }
-        sparql = sparql.substring(0, sparql.indexOf(">"));
+        sparql = sparql.substring(0, sparql.indexOf(endpoint.getResourceSuffix()));
         try {
             sparql = URLDecoder.decode(sparql, "UTF-8");
         } catch (UnsupportedEncodingException ignored) {}
