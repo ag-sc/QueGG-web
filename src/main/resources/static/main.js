@@ -104,7 +104,7 @@ function setupAutoComplete(input) {
         updateActiveSuggestion(true);
     }
 
-    async function renderAnswer(answerDiv, answer) {
+    async function renderAnswer(answerDiv, answer, added) {
         console.log("[render]", answer);
 
         if (answer.constructor == Object) {
@@ -133,7 +133,7 @@ function setupAutoComplete(input) {
                         elabel = elabel.substring(0, elabel.indexOf("@"));
                     }
                     if (elabel.indexOf("^^") > -1) {
-                        elabel = elabel.substring(0, elabel.indexOf("^^"));
+                            elabel = elabel.substring(0, elabel.indexOf("^^"));
                     }
 
                     const cardTitle = document.createElement("h5");
@@ -182,7 +182,7 @@ function setupAutoComplete(input) {
                     let value = answer[key];
 
                     let line = "";
-                    if (key.length > 1) {
+                    if (key.length > 1 && key != "label" && key != "object") {
                         line = key + " ";
                     }
 
@@ -196,10 +196,14 @@ function setupAutoComplete(input) {
                     line += value;
                     answerContent += line + "\n";
                 }
-                var answerText = document.createTextNode(answerContent.replace("http://dbpedia.org/resource/", ""));
-                answerContainer.appendChild(answerText);
+                answerContent = answerContent.replace("http://dbpedia.org/resource/", "");
+                if (added.indexOf(answerContent) === -1) {
+                    var answerText = document.createTextNode(answerContent);
+                    answerContainer.appendChild(answerText);
 
-                answerDiv.appendChild(answerContainer);
+                    answerDiv.appendChild(answerContainer);
+                    added.push(answerContent);
+                }
             }
         } else {
             const answerContainer = document.createElement("div");
@@ -264,8 +268,9 @@ function setupAutoComplete(input) {
 
         if (res_data['sparql-result']) {
             console.log("[render sparql result]");
+            let added = [];
             res_data['sparql-result'].forEach(async (answer) => {
-                await renderAnswer(answerDiv, answer);
+                await renderAnswer(answerDiv, answer, added);
             });
         }
 

@@ -15,6 +15,7 @@ public class Trie<T> {
 
     public void insert(String path, T data) throws TrieNode.DuplicateInsertException {
         if (this.root == null) {
+            System.err.println("[trie] initializing root node");
             this.root = new TrieNode<T>(null, path, data);
             return;
         }

@@ -63,6 +63,7 @@ public class QuestionLoader {
         @Override
         public void run() {
             try {
+                int sizeBefore = trie.size();
                 trie.insert(q.getQuestion(), q);
             } catch (TrieNode.DuplicateInsertException e) {
                 System.err.println(e.getMessage());
@@ -108,6 +109,7 @@ public class QuestionLoader {
             String sparql = row.get("sparql");
             String answer = row.get("answer");
 
+            System.err.println("inserting question (" + row.getOrDefault("id", question) + ")");
             Question q = new Question(question, sparql, answer);
 
             InsertTask task = new InsertTask(trie, q);

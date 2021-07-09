@@ -49,9 +49,12 @@ public class TrieNode<T> {
     private T data;
 
     @Getter(onMethod_={@Synchronized})
-    private String path;
+    private String path = "";
 
     public void setPath(String path) {
+        if (path == null) {
+            path = "";
+        }
         this.path = path;
         this.fullPathCache = null;
     }

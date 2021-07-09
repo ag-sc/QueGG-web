@@ -64,7 +64,7 @@ public class QueryController {
             result.put("question", question.getQuestion());
             result.put("answer", question.getAnswer());
             result.put("sparql", question.getSparql());
-            executeSparql(result, question.getSparql());
+            executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
         }
 
         return result;
@@ -77,29 +77,33 @@ public class QueryController {
             Question data = node.getData();
             if (node.getData() == null)
                 continue;
-            String sparql = data.getSparql();
 
-            // TODO extend EndpointConfiguration to make this dynamic
-            // TODO respect prefixes defined in EndpointConfiguration
+            String query = endpoint.getPrefixSparql().trim() + "\n" + data.getSparql();
 
-            if (sparql == null)
-                continue;
-            if (!sparql.contains("<http://dbpedia.org/resource/")) {
-                continue;
+            for (String line: query.split("\n")) {
+                line = line.trim();
+                if (line.toUpperCase().startsWith("PREFIX ")) {
+                    continue;
+                }
+                if (line == null)
+                    continue;
+                if (!line.contains(endpoint.getResourcePrefix())) {
+                    continue;
+                }
+                line = line.substring(line.indexOf(endpoint.getResourcePrefix()) + endpoint.getResourcePrefix().length());
+                if (!line.contains(endpoint.getResourceSuffix())) {
+                    continue;
+                }
+                line = line.substring(0, line.indexOf(endpoint.getResourceSuffix()));
+                try {
+                    line = URLDecoder.decode(line, "UTF-8");
+                } catch (UnsupportedEncodingException ignored) {}
+                line = line.replace("_", " ").trim();
+
+                if (line.length() == 0) continue;
+
+                labels.add(line);
             }
-            sparql = sparql.substring(sparql.indexOf("<http://dbpedia.org/resource/") + "<http://dbpedia.org/resource/".length());
-            if (!sparql.contains(">")) {
-                continue;
-            }
-            sparql = sparql.substring(0, sparql.indexOf(">"));
-            try {
-                sparql = URLDecoder.decode(sparql, "UTF-8");
-            } catch (UnsupportedEncodingException ignored) {}
-            sparql = sparql.replace("_", " ").trim();
-
-            if (sparql.length() == 0) continue;
-
-            labels.add(sparql);
         }
 
         return labels;
@@ -176,7 +180,7 @@ public class QueryController {
 
         // Remote execution.
         try ( QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint.getEndpoint(), query) ) {
-            // Set the DBpedia specific timeout.
+            // set endpoint timeout.
             ((QueryEngineHTTP)qexec).addParam("timeout", "10000") ;
 
             // Execute.
@@ -224,12 +228,12 @@ public class QueryController {
             result.put("sparql-error", qpe.toString());
             return;
         }
-        List<String> resolveResources =new ArrayList<>();
+        List<String> resolveResources = new ArrayList<>();
         List<Map<String, String>> rsmap = new ArrayList<>();
 
         // Remote execution.
-        try ( QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query) ) {
-            // Set the DBpedia specific timeout.
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint.getEndpoint(), query)) {
+            // Set the endpoint specific timeout.
             ((QueryEngineHTTP)qexec).addParam("timeout", "10000") ;
 
             // Execute.
@@ -280,7 +284,12 @@ public class QueryController {
 
     private void postprocessResolved(Map<String, String> resolved, String oresource) {
         if(resolved.getOrDefault("elabel", null) == null) {
-            String elabel = oresource.replace("http://dbpedia.org/resource/", "").replace("_", " ");
+            String elabel = oresource;
+            for (String prefix: endpoint.getPrefixes().keySet()) {
+                String longform = endpoint.getPrefixes().get(prefix);
+                elabel = elabel.replace(longform, prefix);
+            }
+            elabel = elabel.replace("_", " ");
             elabel = elabel.trim();
             if (elabel.startsWith("<")) {
                 elabel = elabel.substring(1);
@@ -293,8 +302,11 @@ public class QueryController {
 
         if (resolved.containsKey("etype") && resolved.get("etype") != null) {
             String etype = resolved.get("etype");
-            etype = etype.replace("http://www.w3.org/2002/07/owl#", "owl:");
-            etype = etype.replace("http://dbpedia.org/resource/", "dbr:");
+            for (String prefix: endpoint.getPrefixes().keySet()) {
+                String longform = endpoint.getPrefixes().get(prefix);
+                etype = etype.replace(longform, prefix);
+            }
+
             if (etype.contains("#")) {
                 val parts = etype.split("#");
                 etype = parts[parts.length - 1];
@@ -310,15 +322,26 @@ public class QueryController {
         }
     }
 
-    private String extractResource(String sparql) {
-        if (!sparql.contains("<http://dbpedia.org/resource/")) {
-            return null;
+    private String extractResource(String query) {
+        for (String line: query.split("\n")) {
+            line = line.trim();
+            if ("".equals(line) || line.toUpperCase().startsWith("PREFIX ")) {
+                continue;
+            }
+            if (!line.contains(endpoint.getResourcePrefix())) {
+                return null;
+            }
+            line = line.substring(line.indexOf(endpoint.getResourcePrefix()));
+            if (!line.contains(endpoint.getResourceSuffix())) {
+                return null;
+            }
+            String resource = line.substring(0, line.indexOf(endpoint.getResourceSuffix()) + 1);
+            if ("".equals(resource)) {
+                return null;
+            }
+            return resource;
         }
-        sparql = sparql.substring(sparql.indexOf("<http://dbpedia.org/resource/"));
-        if (!sparql.contains(">")) {
-            return null;
-        }
-        return sparql.substring(0, sparql.indexOf(">") + 1);
+        return null;
     }
 
     private List<Map<String, String>> resultSetToMap(List<String> resolveResources, ResultSet rs) {
@@ -330,7 +353,11 @@ public class QueryController {
             QuerySolution row = rs.nextSolution();
             for (String rvar: rs.getResultVars()) {
                 val rval = row.get(rvar).toString();
-                if (rval.startsWith("http://dbpedia.org/resource/")) {
+                String rprefix = endpoint.getResourcePrefix();
+                if (rprefix.startsWith("<")) {
+                    rprefix = rprefix.substring(1);
+                }
+                if (rval.contains(rprefix)) {
                     resolveResources.add(rval);
                     rowToResolve = true;
                 }

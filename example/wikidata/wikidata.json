@@ -1,0 +1,15 @@
+{
+    "endpoint": "https://query.wikidata.org/sparql",
+    "language" : "en",
+    "resourcePrefix" : "<http://www.wikidata.org/entity/",
+    "resourceSuffix" : ">",
+    "resourceQuery" : "PREFIX wd: <http://www.wikidata.org/entity/>\nPREFIX wdt: <http://www.wikidata.org/prop/direct/>\nPREFIX schema: <http://schema.org/>\n\nSELECT ?etype ?elabel ?elink ?eabstract ?ethumbnail WHERE {\n    OPTIONAL{ %RES% rdf:type ?etype .}\n    OPTIONAL{ %RES% rdfs:label ?elabel .            FILTER (lang(?elabel) = 'en') }\n    OPTIONAL{ %RES% wdt:P856 ?elink . }\n    OPTIONAL{ %RES% schema:description ?eabstract . \n            FILTER (lang(?eabstract) = 'en')\n    }\n    OPTIONAL{ %RES% wdt:P18 ?ethumbnail . }\n    OPTIONAL{ %RES% wdt:P242 ?ethumbnail . }\n} LIMIT 1\n",
+    "prefix": 
+            {
+                "wdt": "http://www.wikidata.org/prop/direct/",
+                "wd": "http://www.wikidata.org/entity/",
+                "rdf:" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                "xsd:" : "http://www.w3.org/2001/XMLSchema/",
+                "rdfs:" : "http://www.w3.org/2000/01/rdf-schema#"
+            }
+}

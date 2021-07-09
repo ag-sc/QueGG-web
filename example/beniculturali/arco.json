@@ -1,0 +1,30 @@
+{
+  "endpoint" : "https://dati.beniculturali.it/sparql",
+  "language" : "it",
+  "resourcePrefix" : "<http://dati.beniculturali.it/iccd/schede/resource/uod/",
+  "resourceSuffix" : ">",
+  "resourceQuery" : "SELECT ?etype ?elabel ?elink ?eabstract ?ethumbnail WHERE {\n    OPTIONAL{ %RES% rdf:type ?etype .}\n    OPTIONAL{ %RES% rdfs:label ?elabel .            FILTER (lang(?elabel) = 'it') }\n    OPTIONAL{ %RES% rdfs:label ?elabel . }\n    OPTIONAL{ %RES% <http://xmlns.com/foaf/0.1/isPrimaryTopicOf> ?elink . }\n    OPTIONAL{ %RES% <http://lod.xdams.org/reload/oad/title> ?eabstract . }\n    OPTIONAL{ %RES% <http://dbpedia.org/ontology/thumbnail> ?ethumbnail . }\n    \n} LIMIT 1\n",
+  "prefix" : {
+    "muapit:" : "https://w3id.org/italia/onto/MU/",
+    "owl:" : "http://www.w3.org/2002/07/owl/",
+    "cis:" : "http://dati.beniculturali.it/cis/",
+    "context:" : "https://w3id.org/arco/ontology/context-description/",
+    "arco-arco:" : "https://w3id.org/arco/core/",
+    "dbo:" : "http://dbpedia.org/ontology/",
+    "dcterms:" : "http://purl.org/dc/terms/",
+    "dbr:" : "http://dbpedia.org/resource/",
+    "xsd:" : "http://www.w3.org/2001/XMLSchema/",
+    "rdfs:" : "http://www.w3.org/2000/01/rdf-schema#",
+    "clvapit:" : "https://w3id.org/italia/onto/CLV/",
+    "arco-dd:" : "https://w3id.org/arco/ontology/denotative-description/",
+    "arco:" : "https://dati.beniculturali.it/lodview-arco/ontology/arco/",
+    "rdf:" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "arco-cd:" : "https://w3id.org/arco/ontology/context-description/",
+    "l0:" : "https://w3id.org/italia/onto/l0/",
+    "roapit:" : "https://w3id.org/italia/onto/RO/",
+    "dc:" : "http://purl.org/dc/elements/1.1/",
+    "oad:" : "http://lod.xdams.org/reload/oad/",
+    "arco-location:" : "https://w3id.org/arco/ontology/location/",
+    "arco-catalogue:" : "https://w3id.org/arco/ontology/catalogue/"
+  }
+}

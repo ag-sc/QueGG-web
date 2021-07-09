@@ -1,0 +1,14 @@
+version: '3'
+services:
+    web:
+        build:
+            context: .
+            dockerfile: "Dockerfile.it"
+        ports:
+            - "8089:8089"
+        environment:
+            - QUEGG_ALLOW_UPLOADS=true
+            - QUEGG_TRIECACHE=/quegg/trie.cache
+            - QUEGG_CONFIG=/quegg/config.json
+        volumes:
+            - "./data:/quegg"

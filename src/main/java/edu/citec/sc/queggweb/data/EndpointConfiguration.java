@@ -77,7 +77,7 @@ public class EndpointConfiguration {
         saveToFile();
     }
 
-    private void saveToFile() {
+    public void saveToFile() {
         ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);;
         final File target = configFileLocation();
 
@@ -118,6 +118,7 @@ public class EndpointConfiguration {
             return;
         }
 
+        System.err.println("[config] load " + target);
         try (FileInputStream fis = new FileInputStream(target)) {
             ObjectMapper mapper = new ObjectMapper();
             EndpointConfiguration loadedState = mapper.readValue(fis, EndpointConfiguration.class);
@@ -143,6 +144,15 @@ public class EndpointConfiguration {
         }
         if (o.getLanguage() != null && !"".equals(o.getLanguage())) {
             this.setLanguage(o.getLanguage());
+        }
+        if (o.getResourcePrefix() != null) {
+            this.setResourcePrefix(o.getResourcePrefix());
+        }
+        if (o.getResourceSuffix() != null) {
+            this.setResourceSuffix(o.getResourceSuffix());
+        }
+        if (o.getResourceQuery() != null) {
+            this.setResourceQuery(o.getResourceQuery());
         }
         if (o.getPrefixes() != null && !o.getPrefixes().isEmpty()) {
             for (String prefix: o.getPrefixes().keySet()) {

@@ -2,6 +2,7 @@ package edu.citec.sc.queggweb.views;
 
 import edu.citec.sc.queggweb.data.EndpointConfiguration;
 import edu.citec.sc.queggweb.data.QuestionLoader;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class UploadController {
 
     @PostMapping("/import")
     public ResponseEntity<String> handleFileUpload(@RequestParam(value = "file", required = true) MultipartFile file,
-                                                   @RequestParam(value = "config", required = false) MultipartFile config,
+                                                   @RequestParam(value = "config", required = true) MultipartFile config,
                                                    @RequestParam(required=false, defaultValue = "en") String lang,
                                                    @RequestParam(required=false, defaultValue = "10") Integer maxBindingCount,
                                                    @RequestParam(required=false, defaultValue = "nouns") String targetType,
@@ -50,7 +51,7 @@ public class UploadController {
 
         String responseStatus = "";
 
-        if (config != null && config.getSize() > 0) {
+        if (config != null) {
             File tmpConfig  = new File("/tmp/config_import.json");
 
             try (OutputStream os = new FileOutputStream(tmpConfig)) {
@@ -63,6 +64,7 @@ public class UploadController {
             }
 
             endpoint.loadFromFile(tmpConfig);
+            endpoint.saveToFile();
         }
 
         lang = lang.toUpperCase();
@@ -72,9 +74,9 @@ public class UploadController {
             System.err.println("Upload received but parameter 'inputFormat' contained an invalid value");
             return new ResponseEntity<>("parameter 'inputFormat' can only be 'CSV' or 'TTL'", HttpStatus.BAD_REQUEST);
         }
-        if (!"DE".equals(lang) && !"EN".equals(lang)) {
-            System.err.println("Upload received but parameter 'lang' contained an invalid value");
-            return new ResponseEntity<>("parameter 'lang' can only be 'EN' or 'DE'", HttpStatus.BAD_REQUEST);
+        if (lang.length() != 2) {
+            System.err.println("Upload received but parameter 'lang' malformed");
+            return new ResponseEntity<>("parameter 'lang' must be 2 characters", HttpStatus.BAD_REQUEST);
         }
         if (!"nouns".equals(targetType) && !"adjectives".equals(targetType) && !"verbs".equals(targetType)) {
             System.err.println("Upload received but parameter 'targetType' contained an invalid value");
@@ -84,8 +86,24 @@ public class UploadController {
         System.err.println("Starting import conversion, file length: " + file.getSize() +
                 " bytes, language: " + lang);
 
-        new File("/tmp/import/" + targetType).mkdirs();
-        new File("/tmp/generatorout").mkdirs();
+        File importDirectory = new File("/tmp/import/" + targetType);
+        File outputDirectory = new File("/tmp/generatorout");
+        if (!importDirectory.exists()) {
+            System.err.println("creating import directory " + importDirectory);
+            importDirectory.mkdirs();
+        }
+        if (outputDirectory.exists()) {
+            System.err.println("deleting previous output directory " + outputDirectory);
+            try {
+                FileUtils.deleteDirectory(outputDirectory);
+            } catch (IOException e) {
+                throw new RuntimeException("failed to delete previous output directory " + outputDirectory);
+            }
+        }
+        if (!outputDirectory.exists()) {
+            System.err.println("creating output directory " + outputDirectory);
+            outputDirectory.mkdirs();
+        }
 
         String tmpFilename = "/tmp/import/" + targetType + "/import." + ("CSV".equals(inputFormat) ? "csv" : "ttl");
         File tmpFile = new File(tmpFilename);
