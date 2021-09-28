@@ -1,6 +1,7 @@
 version: '3'
 services:
     web:
+        image: quegg-web:italian
         build:
             context: .
             dockerfile: "Dockerfile.it"

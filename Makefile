@@ -29,5 +29,11 @@ clean:
 	echo "{}" > ./data/config.json
 	echo "{}" > ./data/trie.cache
 
+push:
+	docker image tag quegg-web_web:latest agsc/quegg-web:latest && docker push agsc/quegg-web:latest
+
+push.it:
+	docker image tag quegg-web:italian agsc/quegg-web:italian && docker push agsc/quegg-web:italian
+
 shell:
 	docker exec -it "$$(docker ps | grep "quegg-web" | cut -d " " -f1)" bash

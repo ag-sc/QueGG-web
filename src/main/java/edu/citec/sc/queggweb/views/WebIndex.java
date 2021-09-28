@@ -14,4 +14,10 @@ public class WebIndex {
         return "index";
     }
 
+    @GetMapping("/index")
+    public String indexAlternative(@RequestParam(name="name", required=false, defaultValue="") String name, Model model) {
+        model.addAttribute("name", name);
+        return "index";
+    }
+
 }

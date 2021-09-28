@@ -36,6 +36,94 @@ public class UploadController {
 
     }
 
+    @PostMapping("/importQuestions")
+    public ResponseEntity<String> handleQuestionUpload(@RequestParam(value = "file", required = true) MultipartFile file,
+                                                   @RequestParam(value = "config", required = true) MultipartFile config,
+                                                   @RequestParam(required=false, defaultValue = "en") String lang,
+                                                   @RequestParam(required=false, defaultValue = "10") Integer maxBindingCount,
+                                                   @RequestParam(required=false, defaultValue = "nouns") String targetType) {
+        if (!uploadsAllowed()) {
+            System.err.println("Upload received but QUEGG_ALLOW_UPLOADS environment variable is not set to 'true'");
+
+            return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
+        }
+
+        String responseStatus = "";
+
+        if (config != null) {
+            File tmpConfig  = new File("/tmp/config_import.json");
+
+            try (OutputStream os = new FileOutputStream(tmpConfig)) {
+                os.write(config.getBytes());
+                responseStatus = "written " + config.getSize() + " bytes (config)\n";
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            endpoint.loadFromFile(tmpConfig);
+            endpoint.saveToFile();
+        }
+
+        lang = lang.toUpperCase();
+
+        if (lang.length() != 2) {
+            System.err.println("Upload received but parameter 'lang' malformed");
+            return new ResponseEntity<>("parameter 'lang' must be 2 characters", HttpStatus.BAD_REQUEST);
+        }
+        if (!"nouns".equals(targetType) && !"adjectives".equals(targetType) && !"verbs".equals(targetType)) {
+            System.err.println("Upload received but parameter 'targetType' contained an invalid value");
+            return new ResponseEntity<>("parameter 'targetType' can only be 'nouns', 'verbs', or 'adjectives'", HttpStatus.BAD_REQUEST);
+        }
+
+        System.err.println("Starting import conversion, file length: " + file.getSize() +
+                " bytes, language: " + lang);
+
+        File questionImportDirectory = new File("/tmp/questionimport");
+        if (questionImportDirectory.exists()) {
+            System.err.println("deleting previous output directory " + questionImportDirectory);
+            try {
+                FileUtils.deleteDirectory(questionImportDirectory);
+            } catch (IOException e) {
+                throw new RuntimeException("failed to delete previous output directory " + questionImportDirectory);
+            }
+        }
+        if (!questionImportDirectory.exists()) {
+            System.err.println("creating output directory " + questionImportDirectory);
+            questionImportDirectory.mkdirs();
+        }
+
+        File tmpFile = new File(questionImportDirectory, "questions.csv");
+
+        try (OutputStream os = new FileOutputStream(tmpFile)) {
+            os.write(file.getBytes());
+            responseStatus = "written " + file.getSize() + " bytes\n";
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        responseStatus += "upload ok\n";
+
+        try {
+            System.err.println("[info] starting import of uploaded questions");
+            int added = questions.loadExternalCSVs(questionImportDirectory.getAbsolutePath().toString(),
+                    "glob:questions.csv");
+            responseStatus += "# TRIE:\n";
+            responseStatus += Integer.toString(added) + " added trie entries\n";
+            responseStatus += "new size:" + questions.getTrie().size() + "\n";
+
+            return new ResponseEntity<>(responseStatus,
+                    HttpStatus.OK);
+        } catch (IOException e) {
+            responseStatus += e.getMessage() + "\n";
+            return new ResponseEntity<>(responseStatus,
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping("/import")
     public ResponseEntity<String> handleFileUpload(@RequestParam(value = "file", required = true) MultipartFile file,
                                                    @RequestParam(value = "config", required = true) MultipartFile config,
