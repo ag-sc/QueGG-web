@@ -21,7 +21,7 @@ public class TrieTests {
 
     private class MockData {}
 
-    @Test
+    /*@Test
     void emptyTrie() {
         val trie = new Trie<MockData>();
         assertNotNull(trie);
@@ -242,5 +242,5 @@ public class TrieTests {
 
         assertNotNull(suggestions);
         assertFalse(suggestions.isEmpty());
-    }
+    }*/
 }
