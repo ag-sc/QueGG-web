@@ -3,6 +3,7 @@ package edu.citec.sc.queggweb.data;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -112,7 +113,7 @@ public class EndpointConfiguration {
         return new File("/tmp/quegg_config.json");
     }
 
-    public void loadFromFile(File target) {
+    public void loadFromFile(String subtree, File target) {
         if (target == null || !target.exists()) {
             System.err.println("[config] skipping configuration load for <" + target.getAbsolutePath() + ">: not found");
             return;
@@ -121,8 +122,9 @@ public class EndpointConfiguration {
         System.err.println("[config] load " + target);
         try (FileInputStream fis = new FileInputStream(target)) {
             ObjectMapper mapper = new ObjectMapper();
-            EndpointConfiguration loadedState = mapper.readValue(fis, EndpointConfiguration.class);
-            this.merge(loadedState);
+            Map<String, EndpointConfiguration> loadedState = mapper.readValue(fis, new TypeReference<Map<String, EndpointConfiguration>>() {
+            }););
+            this.merge(subtree, loadedState);
         } catch (FileNotFoundException e) {
             // should not trigger since we make this explicit above
             e.printStackTrace();

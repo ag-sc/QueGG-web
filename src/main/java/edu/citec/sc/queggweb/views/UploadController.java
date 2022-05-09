@@ -39,6 +39,7 @@ public class UploadController {
     @PostMapping("/importQuestions")
     public ResponseEntity<String> handleQuestionUpload(@RequestParam(value = "file", required = true) MultipartFile file,
                                                    @RequestParam(value = "config", required = true) MultipartFile config,
+                                                   @RequestParam(value = "target", required = true) String target,
                                                    @RequestParam(required=false, defaultValue = "en") String lang,
                                                    @RequestParam(required=false, defaultValue = "10") Integer maxBindingCount,
                                                    @RequestParam(required=false, defaultValue = "nouns") String targetType) {
@@ -125,8 +126,9 @@ public class UploadController {
     }
 
     @PostMapping("/import")
-    public ResponseEntity<String> handleFileUpload(@RequestParam(value = "file", required = true) MultipartFile file,
-                                                   @RequestParam(value = "config", required = true) MultipartFile config,
+    public ResponseEntity<String> handleFileUpload(@RequestParam(value="file", required=true) MultipartFile file,
+                                                   @RequestParam(value="config", required=true) MultipartFile config,
+                                                   @RequestParam(value="target", required=true) String target,
                                                    @RequestParam(required=false, defaultValue = "en") String lang,
                                                    @RequestParam(required=false, defaultValue = "10") Integer maxBindingCount,
                                                    @RequestParam(required=false, defaultValue = "nouns") String targetType,
@@ -151,7 +153,7 @@ public class UploadController {
                 e.printStackTrace();
             }
 
-            endpoint.loadFromFile(tmpConfig);
+            endpoint.loadFromFile(target, tmpConfig);
             endpoint.saveToFile();
         }
 
@@ -224,7 +226,7 @@ public class UploadController {
             responseStatus += this.readStream(pr.getErrorStream()) + "\n";
 
             System.err.println("[info] starting import of generator results");
-            int added = questions.loadExternalCSVs("/tmp/generatorout",
+            int added = questions.loadExternalCSVs(target,"/tmp/generatorout",
                     "glob:/tmp/generatorout/questions*.csv");
             responseStatus += "# TRIE:\n";
             responseStatus += Integer.toString(added) + " added trie entries\n";

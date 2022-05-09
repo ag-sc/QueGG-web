@@ -24,12 +24,10 @@ import java.nio.charset.StandardCharsets;
 @Component("questions")
 @Scope("singleton")
 public class QuestionLoader {
-    private static final String CACHE_FILENAME = loadCacheFilename();
-
     @Autowired
     public EndpointConfiguration endpoint;
 
-    private static String loadCacheFilename() {
+    private static String getCacheFilename() {
         String envValue = System.getenv("QUEGG_TRIECACHE");
         if (envValue != null && !envValue.equals("")) {
             return envValue;
@@ -53,10 +51,12 @@ public class QuestionLoader {
 
     private class InsertTask implements Runnable {
 
+        private final String subtreeName;
         private final Trie<Question> trie;
         private final Question q;
 
-        public InsertTask(Trie<Question> trie, Question q) {
+        public InsertTask(String subtreeName, Trie<Question> trie, Question q) {
+            this.subtreeName = subtreeName;
             this.trie = trie;
             this.q = q;
         }
@@ -65,7 +65,7 @@ public class QuestionLoader {
         public void run() {
             try {
                 int sizeBefore = trie.size();
-                trie.insert(q.getQuestion(), q);
+                trie.insert(subtreeName, q.getQuestion(), q);
             } catch (TrieNode.DuplicateInsertException e) {
                 System.err.println(e.getMessage());
             }
@@ -76,7 +76,7 @@ public class QuestionLoader {
         }
     }
 
-    private void loadFromInputStream(final String streamName, InputStream is) throws IOException {
+    private void loadFromInputStream(final String target, final String streamName, InputStream is) throws IOException {
         assert is != null;
 
         int coreCount = Runtime.getRuntime().availableProcessors();
@@ -113,7 +113,8 @@ public class QuestionLoader {
             System.err.println("inserting question (" + row.getOrDefault("id", question) + ")");
             Question q = new Question(question, sparql, answer);
 
-            InsertTask task = new InsertTask(trie, q);
+            // file imports can only target the default subtree
+            InsertTask task = new InsertTask(target, trie, q);
             ingestPool.submit(task);
         }
 
@@ -127,13 +128,13 @@ public class QuestionLoader {
         }
 
         System.err.println("ingestion complete (" + threadCount + " threads terminated)");
-        trie.store(CACHE_FILENAME);
+        trie.store(getCacheFilename());
     }
 
-    private void loadFromCSV() throws IOException {
+    private void loadFromCSV(final String target) throws IOException {
         try (InputStream is = Thread.currentThread().getContextClassLoader()
                 .getResourceAsStream("data/questions.csv")) {
-            loadFromInputStream("resource-stream", is);
+            loadFromInputStream(target, "resource-stream", is);
             trie.dump(true);
         }
     }
@@ -141,17 +142,17 @@ public class QuestionLoader {
     public QuestionLoader() throws IOException {
         loadFromCache();
         if (trie.size() == 0) {
-            loadFromCSV();
+            loadFromCSV("default");
         }
 
-        loadExternalCSVs();
+        loadDefaultFromExternalCSVs();
     }
 
-    private int loadExternalCSVs() throws IOException {
-        return loadExternalCSVs("/tmp", "glob:/tmp/question*.csv");
+    private int loadDefaultFromExternalCSVs() throws IOException {
+        return loadExternalCSVs("default", "/tmp", "glob:/tmp/question*.csv");
     }
 
-    public int loadExternalCSVs(String baseDirectory, String globPattern) throws IOException {
+    public int loadExternalCSVs(final String target, String baseDirectory, String globPattern) throws IOException {
         PathMatcher matcher = FileSystems.getDefault().getPathMatcher(globPattern);
 
         int prevSize = trie.size();
@@ -165,9 +166,9 @@ public class QuestionLoader {
                     try (InputStream is = Files.newInputStream(child, StandardOpenOption.READ)) {
                         System.err.println("loading " + child + ", trie size: " + trie.size());
 
-                        loadFromInputStream(child.getFileName().toString(), is);
+                        loadFromInputStream(target, child.getFileName().toString(), is);
                         System.err.println("new trie size: " + trie.size());
-                        trie.store(CACHE_FILENAME);
+                        trie.store(getCacheFilename());
                     }
                 }
             }
@@ -178,14 +179,20 @@ public class QuestionLoader {
 
     private void loadFromCache() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        File infile = new File(CACHE_FILENAME);
+        File infile = new File(getCacheFilename());
         if (infile.exists()) {
             val trie_root = mapper.readValue(infile,
-                    new TypeReference<TrieNode<Question>>() {
+                    new TypeReference<Map<String, TrieNode<Question>>>() {
                     });
             fixParents(trie_root, null);
-            trie.setRoot(trie_root);
+            trie.setRoots(trie_root);
             System.out.println("restored trie from cache. size: " + trie.size());
+        }
+    }
+
+    private void fixParents(Map<String, TrieNode<Question>> trie_roots, TrieNode<Question> parent) {
+        for (String subtree: trie_roots.keySet()) {
+            fixParents(trie_roots.get(subtree), parent);
         }
     }
 
@@ -258,16 +265,16 @@ public class QuestionLoader {
         return labels;
     }
 
-    public List<TrieNode<Question>> autocomplete(String query, int topN, int maxDepth) {
+    public List<TrieNode<Question>> autocomplete(String subtree, String query, int topN, int maxDepth) {
         final List<TrieNode<Question>> suggestions = new ArrayList<>();
 
-        if (this.trie == null || this.trie.getRoot() == null) {
+        if (this.trie == null || this.trie.getRoot(subtree) == null) {
             // no questions loaded into trie yet
             System.err.println("[warning] autocomplete failed: no data in trie");
             return suggestions;
         }
 
-        TrieNode<Question> cur = this.trie.getRoot().find(query, true);
+        TrieNode<Question> cur = this.trie.getRoot(subtree).find(query, true);
 
         this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, false);
         boolean extendedBySpace = false;
