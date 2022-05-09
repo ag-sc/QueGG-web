@@ -43,13 +43,14 @@ public class QueryController {
     @GetMapping("/query")
     public Map<String, Object> query(@RequestParam(name="q", required=false, defaultValue="") String query,
                                      @RequestParam(name="answer", required=false, defaultValue="") String answer,
+                                     @RequestParam(name="target", required=false, defaultValue="default") String subtree,
                                      Model model) {
         Map<String, Object> result = new HashMap<>();
 
         result.put("query", query);
         result.put("question_count", questions.size());
 
-        val suggestions = questions.autocomplete(query,20, 4);
+        val suggestions = questions.autocomplete(subtree, query,20, 4);
         val results = questions.suggestionsToResults(suggestions);
 
         result.put("results", results);
@@ -109,8 +110,8 @@ public class QueryController {
         return labels;
     }
 
-    private void markEntities(String query, List<AutocompleteSuggestion> results) {
-        val extendedSuggestions = questions.autocomplete(query,100, 5);
+    private void markEntities(String subtree, String query, List<AutocompleteSuggestion> results) {
+        val extendedSuggestions = questions.autocomplete(subtree, query,100, 5);
         val extendedResults = questions.suggestionsToResults(extendedSuggestions);
 
         val prefixTrie = new Trie<String>();
@@ -124,16 +125,16 @@ public class QueryController {
             StringBuilder sb = new StringBuilder(textRemainder);
             System.err.println(suggestionText + " | " + textRemainder);
             try {
-                suffixTrie.insert(sb.reverse().toString(), textRemainder);
+                suffixTrie.insertDefault(sb.reverse().toString(), textRemainder);
             } catch (TrieNode.DuplicateInsertException ignored) {}
             try {
-                prefixTrie.insert(suggestionText, suggestionText);
+                prefixTrie.insertDefault(suggestionText, suggestionText);
             } catch (TrieNode.DuplicateInsertException ignored) {}
         }
 
         String shortestSuffix = null;
 
-        TrieNodeVisitor<String> visitor = new TrieNodeVisitor<String>(suffixTrie.getRoot()) {
+        TrieNodeVisitor<String> visitor = new TrieNodeVisitor<>(suffixTrie.getRoot(subtree)) {
             @Override
             protected void visit(TrieNode<String> node) {
                 if (node == null) return;
@@ -161,7 +162,6 @@ public class QueryController {
 
         System.err.println(prefixTrie);
         System.err.println(suffixTrie);
-
     }
 
     private Map<String, String> resourceSparql(String resource) {
