@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.nio.charset.StandardCharsets;
 
 @Component("questions")
 @Scope("singleton")
@@ -160,8 +161,10 @@ public class QuestionLoader {
                     continue;
                 }
                 if (matcher.matches(child)) {
+
                     try (InputStream is = Files.newInputStream(child, StandardOpenOption.READ)) {
                         System.err.println("loading " + child + ", trie size: " + trie.size());
+
                         loadFromInputStream(child.getFileName().toString(), is);
                         System.err.println("new trie size: " + trie.size());
                         trie.store(CACHE_FILENAME);

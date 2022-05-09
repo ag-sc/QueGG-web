@@ -77,7 +77,7 @@ public class UploadController {
             return new ResponseEntity<>("parameter 'targetType' can only be 'nouns', 'verbs', or 'adjectives'", HttpStatus.BAD_REQUEST);
         }
 
-        System.err.println("Starting import conversion, file length: " + file.getSize() +
+        System.err.println("Starting question import, file length: " + file.getSize() +
                 " bytes, language: " + lang);
 
         File questionImportDirectory = new File("/tmp/questionimport");
@@ -110,7 +110,7 @@ public class UploadController {
         try {
             System.err.println("[info] starting import of uploaded questions");
             int added = questions.loadExternalCSVs(questionImportDirectory.getAbsolutePath().toString(),
-                    "glob:questions.csv");
+                    "glob:" + questionImportDirectory.getAbsolutePath().toString() + "/" + "question*.csv");
             responseStatus += "# TRIE:\n";
             responseStatus += Integer.toString(added) + " added trie entries\n";
             responseStatus += "new size:" + questions.getTrie().size() + "\n";
