@@ -63,7 +63,7 @@ public class UploadController {
                 e.printStackTrace();
             }
 
-            endpoint.loadFromFile(tmpConfig);
+            endpoint.loadFromFile(target, tmpConfig);
             endpoint.saveToFile();
         }
 

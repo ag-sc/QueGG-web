@@ -137,7 +137,7 @@ public class EndpointConfiguration {
 
     public void loadFromFile() {
         final File target = configFileLocation();
-        loadFromFile(target);
+        loadFromFile("default", target);
     }
 
     private void merge(EndpointConfiguration o) {
