@@ -123,7 +123,7 @@ public class EndpointConfiguration {
         try (FileInputStream fis = new FileInputStream(target)) {
             ObjectMapper mapper = new ObjectMapper();
             Map<String, EndpointConfiguration> loadedState = mapper.readValue(fis, new TypeReference<Map<String, EndpointConfiguration>>() {
-            }););
+            });
             this.merge(subtree, loadedState);
         } catch (FileNotFoundException e) {
             // should not trigger since we make this explicit above
