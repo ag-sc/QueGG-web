@@ -25,6 +25,7 @@ import org.apache.commons.io.IOUtils;
 @Scope("singleton")
 public class QuestionLoader {
     private static final String CACHE_FILENAME = loadCacheFilename();
+    private static final String InputDir =  "../resources/";
 
     @Autowired
     public EndpointConfiguration endpoint;
@@ -36,7 +37,8 @@ public class QuestionLoader {
         }
 
         // default value
-        return "/tmp/trie.cache";
+        //return "/tmp/trie.cache";
+       return InputDir+"trie.cache";
     }
 
     private final int MAX_CHILD_SAMPLES = 200;
@@ -81,60 +83,64 @@ public class QuestionLoader {
 
         int coreCount = Runtime.getRuntime().availableProcessors();
         int threadCount = coreCount > 2 ? coreCount - 2 : 2;
-        
-        
-    
-       
 
-        CSVReaderHeaderAware reader = null;
-        try {
-            File file = new File("src/main/resources/questions.csv");
-            InputStream fileStream = new FileInputStream(file);
-            val in = new BufferedReader(new InputStreamReader(fileStream));
+        File files = new File(InputDir);
 
-            reader = new CSVReaderHeaderAware(in);
-        } catch (Exception npe) {
-            System.err.println("no header found, skipping stream " + streamName);
-            return;
-        }
+        for (String fileName : files.list()) {
+             File file=new File(fileName);
+            CSVReaderHeaderAware reader = null;
+            try {
+                //File file = new File("src/main/resources/questions.csv");
+                InputStream fileStream = new FileInputStream(file);
+                val in = new BufferedReader(new InputStreamReader(fileStream));
 
-        System.err.println("Starting ingest with " + threadCount + " threads");
-        ExecutorService ingestPool = Executors.newFixedThreadPool(threadCount);
-
-        Map<String, String> row;
-        while ((row = reader.readMap()) != null) {
-            String question = row.get("question");
-
-            if (question == null) {
-                throw new RuntimeException("failed to parse " + streamName + ": question is null or header malformed/missing");
+                reader = new CSVReaderHeaderAware(in);
+            } catch (Exception npe) {
+                System.err.println("no header found, skipping stream " + streamName);
+                return;
             }
 
-            if (question.trim().startsWith("SELECT ") && question.trim().endsWith("}")) {
-                System.err.println("skipping malformed question: " + question);
-                continue;
+            System.err.println("Starting ingest with " + threadCount + " threads");
+            ExecutorService ingestPool = Executors.newFixedThreadPool(threadCount);
+
+            Map<String, String> row;
+            while ((row = reader.readMap()) != null) {
+                String question = row.get("question");
+                question = question.replace("\"", "");
+
+                if (question == null) {
+                    throw new RuntimeException("failed to parse " + streamName + ": question is null or header malformed/missing");
+                }
+
+                if (question.trim().startsWith("SELECT ") && question.trim().endsWith("}")) {
+                    System.err.println("skipping malformed question: " + question);
+                    continue;
+                }
+
+                String sparql = row.get("sparql");
+                sparql = sparql.replace("\"", "");
+                String answer = row.get("answer");
+                answer = answer.replace("\"", "");
+
+                System.err.println("inserting question (" + row.getOrDefault("id", question) + ")");
+                Question q = new Question(question, sparql, answer);
+
+                InsertTask task = new InsertTask(trie, q);
+                ingestPool.submit(task);
             }
 
-            String sparql = row.get("sparql");
-            String answer = row.get("answer");
+            ingestPool.shutdown();
+            System.out.println("waiting for ingest service to complete");
 
-            System.err.println("inserting question (" + row.getOrDefault("id", question) + ")");
-            Question q = new Question(question, sparql, answer);
+            try {
+                ingestPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
 
-            InsertTask task = new InsertTask(trie, q);
-            ingestPool.submit(task);
+            System.err.println("ingestion complete (" + threadCount + " threads terminated)");
+            trie.store(CACHE_FILENAME);
         }
-
-        ingestPool.shutdown();
-        System.out.println("waiting for ingest service to complete");
-
-        try {
-            ingestPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.err.println("ingestion complete (" + threadCount + " threads terminated)");
-        trie.store(CACHE_FILENAME);
     }
 
     private void loadFromCSV() throws IOException {
