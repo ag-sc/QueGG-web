@@ -11,7 +11,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class AutocompleteSuggestion {
+public class AutocompleteSuggestion{
     private String text;
     private String sparql;
     private boolean answerable;

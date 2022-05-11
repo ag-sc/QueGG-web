@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import org.apache.commons.io.IOUtils;
 
 @Component("questions")
 @Scope("singleton")
@@ -80,12 +81,19 @@ public class QuestionLoader {
 
         int coreCount = Runtime.getRuntime().availableProcessors();
         int threadCount = coreCount > 2 ? coreCount - 2 : 2;
+        
+        
+    
+       
 
-        val in = new BufferedReader(new InputStreamReader(is));
         CSVReaderHeaderAware reader = null;
         try {
+            File file = new File("src/main/resources/questions.csv");
+            InputStream fileStream = new FileInputStream(file);
+            val in = new BufferedReader(new InputStreamReader(fileStream));
+
             reader = new CSVReaderHeaderAware(in);
-        } catch (NullPointerException npe) {
+        } catch (Exception npe) {
             System.err.println("no header found, skipping stream " + streamName);
             return;
         }

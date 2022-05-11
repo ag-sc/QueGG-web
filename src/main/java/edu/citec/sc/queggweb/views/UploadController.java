@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import static java.lang.System.exit;
 
 @Controller
 public class UploadController {
@@ -42,28 +43,31 @@ public class UploadController {
                                                    @RequestParam(required=false, defaultValue = "en") String lang,
                                                    @RequestParam(required=false, defaultValue = "10") Integer maxBindingCount,
                                                    @RequestParam(required=false, defaultValue = "nouns") String targetType) {
-        if (!uploadsAllowed()) {
+        //temporary questions.
+        /*if (!uploadsAllowed()) {
             System.err.println("Upload received but QUEGG_ALLOW_UPLOADS environment variable is not set to 'true'");
 
             return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
-        }
+        }*/
 
         String responseStatus = "";
+        
+        String fileName="/home/elahi/AHack/general/interface/QueGG-web/example/dbpedia.json";
 
         if (config != null) {
-            File tmpConfig  = new File("/tmp/config_import.json");
-
+            File tmpConfig = new File(fileName);
             try (OutputStream os = new FileOutputStream(tmpConfig)) {
                 os.write(config.getBytes());
                 responseStatus = "written " + config.getSize() + " bytes (config)\n";
+                endpoint.loadFromFile(tmpConfig);
+                endpoint.saveToFile();
+                System.out.println("endpoint is configured successfully!!!");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            endpoint.loadFromFile(tmpConfig);
-            endpoint.saveToFile();
         }
 
         lang = lang.toUpperCase();
@@ -80,7 +84,12 @@ public class UploadController {
         System.err.println("Starting import conversion, file length: " + file.getSize() +
                 " bytes, language: " + lang);
 
-        File questionImportDirectory = new File("/tmp/questionimport");
+        
+        //File questionImportDirectory = new File("/tmp/questionimport");
+        File questionImportDirectory = new File(" /home/elahi/AHack/general/interface/QueGG-web/questionimport/");
+        
+       
+        
         if (questionImportDirectory.exists()) {
             System.err.println("deleting previous output directory " + questionImportDirectory);
             try {
@@ -99,13 +108,14 @@ public class UploadController {
         try (OutputStream os = new FileOutputStream(tmpFile)) {
             os.write(file.getBytes());
             responseStatus = "written " + file.getSize() + " bytes\n";
+            System.out.println("import questions to store is successfull!!!");
+            responseStatus += "upload ok\n";
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        responseStatus += "upload ok\n";
 
         try {
             System.err.println("[info] starting import of uploaded questions");
