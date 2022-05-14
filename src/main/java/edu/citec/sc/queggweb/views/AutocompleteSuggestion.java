@@ -26,6 +26,19 @@ public class AutocompleteSuggestion{
         this.setSparql(fromNode.getData() != null ? fromNode.getData().getSparql() : null);
         this.setAnswerable(fromNode.getData() != null);
         this.setSize(fromNode.size());
+        System.out.println("fromNode.fullPath()::"+fromNode.fullPath());
+        System.out.println("fromNode.fullPath()::"+fromNode.isLeaf());
+        //System.out.println("fromNode.getData().getSparql()::"+fromNode.getData().getSparql());
+        //System.out.println("fromNode.getData()::"+fromNode.getData());
+        System.out.println("fromNode.size()::"+fromNode.size());
+    }
+    
+    public AutocompleteSuggestion(Question question) {
+        this.setText(question.getQuestion());
+        this.setLeaf(true);
+        this.setSparql(question.getSparql());
+        this.setAnswerable(true);
+        this.setSize(size);
     }
 
     public void align(List<String> resourceLabels) {

@@ -2,6 +2,7 @@ package edu.citec.sc.queggweb.views;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import edu.citec.sc.queggweb.uio.CsvFile;
 import edu.citec.sc.queggweb.data.*;
 import lombok.val;
 import org.apache.jena.query.*;
@@ -18,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RestController
 public class QueryController {
@@ -39,8 +42,60 @@ public class QueryController {
     public Map<String, String> resolveResource(@RequestParam(name="r") String resourceName, Model model) {
         return resourceSparql(resourceName);
     }
-
+    
     @GetMapping("/query")
+    public Map<String, Object> query(@RequestParam(name="q", required=false, defaultValue="") String query,
+                                     @RequestParam(name="answer", required=false, defaultValue="") String answer,
+                                     Model model) {
+        Map<String, Object> result = new HashMap<>();
+
+        result.put("query", query);
+        result.put("question_count", questions.size());
+        
+        List<AutocompleteSuggestion> results =new ArrayList<AutocompleteSuggestion>();
+     
+        try {
+            val suggestions = questions.autocomplete(query, 20, 4);
+            results = questions.suggestionsToResults(suggestions);
+            result.put("results", results);
+            result.put("answer", null);
+
+            if (suggestions.size() > 0) {
+                answer = "true";
+            }
+
+            System.out.println("!!!!!!!!!!!!!!!!!!Start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            for (AutocompleteSuggestion autocompleteSuggestion : results) {
+
+                System.out.println("autocompleteSuggestion.getText()::" + autocompleteSuggestion.getText());
+                System.out.println("autocompleteSuggestion.getSparql()::" + autocompleteSuggestion.getSparql());
+                System.out.println("autocompleteSuggestion.getSize()::" + autocompleteSuggestion.getSize());
+                System.out.println();
+            }
+            System.out.println("!!!!!!!!!!!!!!!!!!End!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+            if (!"".equals(answer) && suggestions.size() > 0 && suggestions.get(0) != null) {
+                Question question = suggestions.get(0);
+                result.put("question", question.getQuestion());
+                result.put("answer", question.getAnswer());
+                result.put("sparql", question.getSparql());
+                //System.out.println("question::"+question.getQuestion());
+                //System.out.println("answer::"+question.getAnswer());
+                //System.out.println("sparql::"+question.getSparql());
+                executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(QueryController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+        
+      
+
+        return result;
+    }
+
+    /*@GetMapping("/query")
     public Map<String, Object> query(@RequestParam(name="q", required=false, defaultValue="") String query,
                                      @RequestParam(name="answer", required=false, defaultValue="") String answer,
                                      Model model) {
@@ -58,17 +113,31 @@ public class QueryController {
         if (suggestions.size() > 0 && null != suggestions.get(0).getData()) {
             answer = "true";
         }
+        
+          System.out.println("!!!!!!!!!!!!!!!!!!Start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        for (AutocompleteSuggestion autocompleteSuggestion:results){
+          
+             System.out.println("autocompleteSuggestion.getText()::"+autocompleteSuggestion.getText());
+             System.out.println("autocompleteSuggestion.getSparql()::"+autocompleteSuggestion.getSparql());
+             System.out.println("autocompleteSuggestion.getSize()::"+autocompleteSuggestion.getSize());
+             System.out.println();
+        }
+        System.out.println("!!!!!!!!!!!!!!!!!!End!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
 
         if (!"".equals(answer) && suggestions.size() > 0 && suggestions.get(0).getData() != null) {
             Question question = suggestions.get(0).getData();
             result.put("question", question.getQuestion());
             result.put("answer", question.getAnswer());
             result.put("sparql", question.getSparql());
+            //System.out.println("question::"+question.getQuestion());
+            //System.out.println("answer::"+question.getAnswer());
+            //System.out.println("sparql::"+question.getSparql());
             executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
         }
 
         return result;
-    }
+    }*/
 
     private List<String> gatherSparqlResourceLabels(List<TrieNode<Question>> suggestions) {
         List<String> labels = new ArrayList<>();
@@ -109,7 +178,7 @@ public class QueryController {
         return labels;
     }
 
-    private void markEntities(String query, List<AutocompleteSuggestion> results) {
+    /*private void markEntities(String query, List<AutocompleteSuggestion> results) {
         val extendedSuggestions = questions.autocomplete(query,100, 5);
         val extendedResults = questions.suggestionsToResults(extendedSuggestions);
 
@@ -162,7 +231,7 @@ public class QueryController {
         System.err.println(prefixTrie);
         System.err.println(suffixTrie);
 
-    }
+    }*/
 
     private Map<String, String> resourceSparql(String resource) {
         val cached = resourceCache.getIfPresent(resource);
