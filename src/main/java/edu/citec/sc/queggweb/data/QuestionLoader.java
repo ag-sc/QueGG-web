@@ -87,6 +87,11 @@ public class QuestionLoader {
         File files = new File(InputDir);
 
         for (String fileName : files.list()) {
+            if(!fileName.contains(".csv"))
+                continue;
+            
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!fileName::"+InputDir+fileName);
+            
              File file=new File(fileName);
             CSVReaderHeaderAware reader = null;
             try {
@@ -104,7 +109,9 @@ public class QuestionLoader {
             ExecutorService ingestPool = Executors.newFixedThreadPool(threadCount);
 
             Map<String, String> row;
+            Integer index=0;
             while ((row = reader.readMap()) != null) {
+                index=index+1;
                 String question = row.get("question");
                 question = question.replace("\"", "");
 
@@ -121,7 +128,8 @@ public class QuestionLoader {
                 sparql = sparql.replace("\"", "");
                 String answer = row.get("answer");
                 answer = answer.replace("\"", "");
-
+                
+                System.out.println(index+" "+question+" "+answer);
                 System.err.println("inserting question (" + row.getOrDefault("id", question) + ")");
                 Question q = new Question(question, sparql, answer);
 
