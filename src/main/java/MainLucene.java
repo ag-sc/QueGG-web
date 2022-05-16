@@ -17,7 +17,7 @@ import org.apache.lucene.search.ScoreDoc;
  *
  * @author elahi
  */
-public class Main implements Constants {
+public class MainLucene implements Constants {
 
     private static Boolean testFlag = false;
     private static Set<String> menu = new HashSet<String>();
