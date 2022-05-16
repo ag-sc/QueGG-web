@@ -63,11 +63,11 @@ public class ReadIndex implements Constants{
         TopDocs foundDocs2 = searchByFirstName(searchText, searcher);
 
         Integer index=0;
+           System.out.println("search Text :: "+searchText);
         for (ScoreDoc sd : foundDocs2.scoreDocs) {
             Document d = searcher.doc(sd.doc);
             String questionT=String.format(d.get(fieldQuestion));
-            questionT=questionT.toLowerCase();
-            //System.out.println("result:"+value);
+            //questionT=questionT.toLowerCase();
             String sparqlT =String.format(d.get(fieldSparql));
             String answerT =String.format(d.get(fieldAnswerUri));
             Question question = new Question(questionT, sparqlT, answerT);
