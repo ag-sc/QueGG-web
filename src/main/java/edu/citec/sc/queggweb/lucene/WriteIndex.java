@@ -68,18 +68,18 @@ public class WriteIndex implements Constants{
                         //answer = row[3].replace("\"", "");
                         id = row[0];
                         question = row[1].replace("\"", "");
+                        sparql = row[2].replace("\"", "");
+                        answer = row[3].replace("\"", "");
                         if(question.contains(" null ")|question.contains(" null?"))
                             continue;
-                        //sparql = row[2];
-                        //answer = row[3];
                         flag = true;
                     } catch (Exception ex) {
 
                     }
                     if (flag) {
-                        System.out.println(index + " " + question + " ");
-                        //System.out.println(index + " " + question + " " + sparql + " " + answer + " " + file.getName());
-                        Document document = createDocument(id, question);
+                        //System.out.println(index + " " + question + " ");
+                        System.out.println(index + " " + question + " " + sparql + " " + answer + " " + file.getName());
+                        Document document = createDocument(id, question,sparql,answer);
                         //writer.addDocument(document);
                         //writer.commit();
                         documents.add(document);
@@ -115,10 +115,12 @@ public class WriteIndex implements Constants{
 
     }
     
-    public static Document createDocument(String id, String question) {
+    public static Document createDocument(String id, String question,String sparql,String website) {
         Document document = new Document();
-        document.add(new StringField("id", id, Field.Store.YES));
-        document.add(new TextField("firstName", question, Field.Store.YES));
+        document.add(new StringField(ID_FIELD, id, Field.Store.YES));
+        document.add(new TextField(QUESTION_FIELD, question, Field.Store.YES));
+        document.add(new TextField(SPARQL_FIELD, sparql, Field.Store.YES));
+        document.add(new TextField(ANSWER_FIELD, website, Field.Store.YES));
         return document;
     }
     

@@ -3,6 +3,9 @@ package edu.citec.sc.queggweb.data;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderHeaderAware;
+import static edu.citec.sc.queggweb.constants.Constants.ANSWER_FIELD;
+import static edu.citec.sc.queggweb.constants.Constants.QUESTION_FIELD;
+import static edu.citec.sc.queggweb.constants.Constants.SPARQL_FIELD;
 import edu.citec.sc.queggweb.lucene.ReadIndex;
 import edu.citec.sc.queggweb.views.AutocompleteSuggestion;
 import lombok.Getter;
@@ -226,7 +229,7 @@ public class QuestionLoader {
         return this.loaded;
     }
 
-    /*public List<AutocompleteSuggestion> suggestionsToResults(List<TrieNode<Question>> suggestions) {
+    public List<AutocompleteSuggestion> suggestionsToResultsT(List<TrieNode<Question>> suggestions) {
         val sparqlResourceLabels = this.gatherSparqlResourceLabels(suggestions);
         val results = new ArrayList<AutocompleteSuggestion>();
         for (TrieNode<Question> node: suggestions) {
@@ -239,13 +242,13 @@ public class QuestionLoader {
             results.add(suggestion);
         }
         return results;
-    }*/
+    }
     
      public List<AutocompleteSuggestion> suggestionsToResults(List<Question> suggestions) {
         val results = new ArrayList<AutocompleteSuggestion>();
         for (Question question: suggestions) {
-            AutocompleteSuggestion suggestion = new AutocompleteSuggestion(question);
-            results.add(suggestion);
+            AutocompleteSuggestion autocompleteSuggestion = new AutocompleteSuggestion(question);
+            results.add(autocompleteSuggestion);
         }
         return results;
     }
@@ -289,27 +292,18 @@ public class QuestionLoader {
         return labels;
     }
     
-    public List<Question> autocomplete(String query, int topN, int maxDepth) throws Exception {
-        final List<Question> suggestions = new ArrayList<Question>();
-        
-        
-        //query = "where";
-        System.out.println("query::" + query);
-        Set<String> results = new TreeSet<String>();
-        results = ReadIndex.readIndex("firstName", query);
-        Integer index=0;
-        for (String questionT : results) {
-            System.out.println("questionT::"+questionT);
-            String sparqlT = "select  ?o    {    <http://dbpedia.org/resource/Lower_Canada> <http://dbpedia.org/ontology/capital>  ?o    }";
-            String answerT = "Quebec City";
-            Question question = new Question(questionT, sparqlT, answerT);
-            suggestions.add(question);
-            index=index+1;
-            if(index>=topN)
-                break;
-
+    public List<Question> autocomplete(String query, int topN) throws Exception {
+        Map<String,Question> results= ReadIndex.readIndex(QUESTION_FIELD, SPARQL_FIELD,ANSWER_FIELD, query, topN);
+         List<Question> suggestions=new ArrayList<Question>();
+         
+        for (String questionT : results.keySet()) {
+            Question question =results.get(questionT);
+            //System.out.println("questionT::"+question.getQuestion()+" sparql::"+question.getSparql()+" answer:"+question.getAnswer());
+            //String sparqlT = "select  ?o    {    <http://dbpedia.org/resource/Lower_Canada> <http://dbpedia.org/ontology/capital>  ?o    }";
+            //String answerT = "Quebec City";
+            //Question question = new Question(questionT, sparqlT, answerT);
+            suggestions.add(question);   
         }
-
         return suggestions;
     }
 

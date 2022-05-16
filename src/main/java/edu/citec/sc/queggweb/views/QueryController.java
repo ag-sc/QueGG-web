@@ -55,7 +55,7 @@ public class QueryController {
         List<AutocompleteSuggestion> results =new ArrayList<AutocompleteSuggestion>();
      
         try {
-            val suggestions = questions.autocomplete(query, 20, 4);
+            val suggestions = questions.autocomplete(query, 10);
             results = questions.suggestionsToResults(suggestions);
             result.put("results", results);
             result.put("answer", null);
@@ -64,26 +64,42 @@ public class QueryController {
                 answer = "true";
             }
 
-            System.out.println("!!!!!!!!!!!!!!!!!!Start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        
             for (AutocompleteSuggestion autocompleteSuggestion : results) {
+                 String question=autocompleteSuggestion.getText().toLowerCase().stripLeading().stripLeading().trim();
+                 query=query.toLowerCase().stripLeading().stripLeading().trim();
+                 String sparql=autocompleteSuggestion.getSparql();
+                
+                if (query.equals(question)) {
+                    System.out.println("query::" + query);
+                    System.out.println("question::" + question);
+                    executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + sparql);
+                }
+                    
 
-                System.out.println("autocompleteSuggestion.getText()::" + autocompleteSuggestion.getText());
-                System.out.println("autocompleteSuggestion.getSparql()::" + autocompleteSuggestion.getSparql());
-                System.out.println("autocompleteSuggestion.getSize()::" + autocompleteSuggestion.getSize());
+                //System.out.println("text::" + autocompleteSuggestion.getText());
+                //System.out.println("autocompleteSuggestion.getSparql()::" + autocompleteSuggestion.getSparql());
+                //System.out.println("autocompleteSuggestion.getSize()::" + autocompleteSuggestion.getSize());
                 System.out.println();
             }
             System.out.println("!!!!!!!!!!!!!!!!!!End!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
-            if (!"".equals(answer) && suggestions.size() > 0 && suggestions.get(0) != null) {
+            
+           
+            /*if (!"".equals(answer) && suggestions.size() > 0 && suggestions.get(0) != null) {
                 Question question = suggestions.get(0);
                 result.put("question", question.getQuestion());
                 result.put("answer", question.getAnswer());
                 result.put("sparql", question.getSparql());
+                System.out.println("question::"+question.getQuestion()+" "+question.getQuestion().length());
+                System.out.println("query::"+query+" "+query.length());
+                System.out.println("sparql::"+question.getSparql());
+                if(query.contains(question.getQuestion()))
+                   executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
                 //System.out.println("question::"+question.getQuestion());
                 //System.out.println("answer::"+question.getAnswer());
                 //System.out.println("sparql::"+question.getSparql());
-                executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
-            }
+                //executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
+            }*/
         } catch (Exception ex) {
             Logger.getLogger(QueryController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -178,60 +194,7 @@ public class QueryController {
         return labels;
     }
 
-    /*private void markEntities(String query, List<AutocompleteSuggestion> results) {
-        val extendedSuggestions = questions.autocomplete(query,100, 5);
-        val extendedResults = questions.suggestionsToResults(extendedSuggestions);
-
-        val prefixTrie = new Trie<String>();
-        val suffixTrie = new Trie<String>();
-        val prefix = query.toLowerCase().trim();
-
-        for (AutocompleteSuggestion suggestion: extendedResults) {
-            val suggestionText = suggestion.getText();
-            val textRemainder = suggestionText.substring(prefix.length()).strip();
-            if (textRemainder.length() == 0) continue;
-            StringBuilder sb = new StringBuilder(textRemainder);
-            System.err.println(suggestionText + " | " + textRemainder);
-            try {
-                suffixTrie.insert(sb.reverse().toString(), textRemainder);
-            } catch (TrieNode.DuplicateInsertException ignored) {}
-            try {
-                prefixTrie.insert(suggestionText, suggestionText);
-            } catch (TrieNode.DuplicateInsertException ignored) {}
-        }
-
-        String shortestSuffix = null;
-
-        TrieNodeVisitor<String> visitor = new TrieNodeVisitor<String>(suffixTrie.getRoot()) {
-            @Override
-            protected void visit(TrieNode<String> node) {
-                if (node == null) return;
-                // leaf nodes can never present a suffix
-                if (!node.isLeaf()) return;
-
-                val pathParts = new ArrayList<TrieNode<String>>();
-                TrieNode<String> current = node;
-                while (current != null) {
-                    pathParts.add(current);
-                    if (current.getParent() != null && current.getParent() != current) {
-                        current = current.getParent();
-                    } else {
-                        current = null;
-                    }
-                }
-
-                for (int i = pathParts.size() - 1; i >= 0; i--) {
-
-                }
-
-                System.err.println(node + " " +  pathParts.toString());
-            }
-        };
-
-        System.err.println(prefixTrie);
-        System.err.println(suffixTrie);
-
-    }*/
+ 
 
     private Map<String, String> resourceSparql(String resource) {
         val cached = resourceCache.getIfPresent(resource);
