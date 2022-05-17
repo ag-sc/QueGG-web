@@ -1,6 +1,5 @@
 package edu.citec.sc.queggweb.turtle;
 
-
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -15,34 +14,32 @@ import java.util.TreeMap;
  */
 public interface ConstantsQuestion {
 
-    public static Map<String, String> labels = new TreeMap<String, String>();
-    public static Integer numberOfTriples = 10000;
-    public static String turtleDir = "../resources/en/turtle/";
+    public static String english = "en";
+    public static String italian = "it";
+    public static String german = "de";
+    public static String spanish = "es";
+    public static Integer numberOfTriples = -1;
 
-    public static String outputDir = "../resources/en/entity/";
-    public static String propertyDir = "../resources/en/property/";
-    public static String SUBJECT = "subject";
-    public static String PROPERTY = "property";
-    public static String OBJECT = "object";
-    public static String allTriple = "mappingbased_properties_cleaned_en.ttl";
+    public static String subject = "subject";
+    public static String property = "property";
+    public static String object = "object";
+    public static String turtle = "turtle";
+    public static String entity = "entity";
+    public static String resourceDir = "../resources/";
 
-    public static String entryTriple = "A-entity.ttl";
-    public static String language_en = "en";
-    public static String language_it = "it";
-    public static String labelFile = "labels.ttl";
-    public static String turtleDir_it = "../resources/"+"it"+"/turtle/";
-    public static String outputDir_it = "../resources/it/entity/";
-    public static String propertyDir_it = "../resources/it/property/";
-    public static String allTriple_it = "mappingbased_properties_cleaned_it.ttl";
-    
+    public static String instance_types = "instance_types";
+    public static String labels = "labels";
+    public static String mappingbased_objects = "mappingbased_objects";
+    public static String persondata = "persondata";
+
     public static String FIND_PROPERTY = "FIND_PROPERTY";
-    public static String FIND_PROPERTY_FILES = "FIND_PROPERTY_FILES";
-    public static String FIND_LABELS_OF_ENTITIES="FIND_LABELS_OF_ENTITIES";
-    public static String GREP_COMMAND_FILE = "grep.sh";
+    public static String BUILD_PROPERTY_FILES = "BUILD_PROPERTY_FILES";
+    public static String BUILD_TRIPLE_WITH_LABELS = "BUILD_TRIPLE_WITH_LABELS";
+    public static String GREP_COMMAND_FILE = "grep";
 
-
-    
-
-
+    public static String underscore = "_";
+    public static String ttl = ".ttl";
+    public static String sh = ".sh";
+    public static String txt = ".txt";
 
 }

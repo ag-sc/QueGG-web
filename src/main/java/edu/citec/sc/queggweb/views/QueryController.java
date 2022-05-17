@@ -2,7 +2,7 @@ package edu.citec.sc.queggweb.views;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import edu.citec.sc.queggweb.uio.CsvFile;
+import edu.citec.sc.uio.CsvFile;
 import edu.citec.sc.queggweb.data.*;
 import lombok.val;
 import org.apache.jena.query.*;

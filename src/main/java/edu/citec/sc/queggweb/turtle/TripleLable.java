@@ -11,14 +11,14 @@ package edu.citec.sc.queggweb.turtle;
  *
  * @author elahi
  */
-public class OffLineResult {
+public class TripleLable {
 
     private String subjectUri = null;
     private String subjectLabel = null;
     private String objectUri = null;
     private String objectLabel = null;
 
-    public OffLineResult(String subjectUri, String subjectLabel, String objectUri, String objectLabel) {
+    public TripleLable(String subjectUri, String subjectLabel, String objectUri, String objectLabel) {
         this.subjectUri = subjectUri;
         this.subjectLabel = subjectLabel;
         this.objectUri = objectUri;

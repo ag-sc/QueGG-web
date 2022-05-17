@@ -2,7 +2,7 @@ package edu.citec.sc.queggweb.lucene;
 
 import edu.citec.sc.queggweb.constants.Constants;
 import edu.citec.sc.queggweb.data.Question;
-import edu.citec.sc.queggweb.uio.CsvFile;
+import edu.citec.sc.uio.CsvFile;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

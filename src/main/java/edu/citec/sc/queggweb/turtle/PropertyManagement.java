@@ -6,19 +6,10 @@ package edu.citec.sc.queggweb.turtle;
  * and open the template in the editor.
  */
 
-import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.PROPERTY;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import static java.lang.System.exit;
-import java.util.ArrayList;
+import edu.citec.sc.uio.StringMatcher;
+import edu.citec.sc.uio.FileUtils;
+import java.io.*;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,84 +18,40 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
-import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.GREP_COMMAND_FILE;
 
 /**
  *
  * @author elahi
  */
-public class PropertyManagement {
+public class PropertyManagement implements ConstantsQuestion{
+    private String language=null; 
+    private String property=null;
+    
+    public PropertyManagement(String langaugeT) {
+       this.language=langaugeT; 
+    }
 
-    private static Map<String, String> labels = new TreeMap<String, String>();
+    public  void generateProperty(String propertyInputDir, String labelFileName, Integer numberOfTriples) throws Exception {
+        Set<String> properties = FileUtils.getFiles(propertyInputDir);
+        if (properties.isEmpty()) {
+            throw new Exception("No property file to process!!");
+        }
 
-    public static void generateProperty(String propertyInputDir, String labelFileName,Integer numberOfTriples,String language) throws Exception {
-        Set<String> properties = getFiles(propertyInputDir);
-         if(properties.isEmpty()){
-             throw new Exception("No property file to process!!");
-         }
-
-        for (String property : properties) {
-            String propertyFile = propertyInputDir + property;
-             String content = matchLabelsWithEntities(propertyFile, labelFileName, numberOfTriples);
+        for (String propertyT : properties) {
+            this.property=propertyT;
+            String propertyFile = propertyInputDir + propertyT;
+            String content = matchLabelsWithEntities(propertyFile, labelFileName, numberOfTriples);
             try {
-                //propertyFile=propertyFile.replace(".ttl", "_" + language + ".txt");
-                propertyFile=propertyFile.replace(".ttl", ".txt");
-                stringToFile(content, propertyFile);
+                propertyFile = propertyFile.replace(ttl, txt);
+                FileUtils.stringToFile(content, propertyFile);
             } catch (IOException ex) {
                 Logger.getLogger(PropertyManagement.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
-        System.out.println(labelFileName);
 
-        //String propertyFile = getPropertyFile(inputDir, property);
-        //String labelFileName = tripleDir + language + "_labels.ttl";
-        //labels = tripleFileToHashLabels(labelFileName, numberOfTriples);
-        //System.out.println("labels:" + labels.size());
-    }
-    
-    public static Set<String> getFiles(String propertyInputDir) {
-        System.out.println("propertyInputDir:" +propertyInputDir);
-        Set<String> properties = new TreeSet<String>();
-        File file = new File(propertyInputDir);
-        String[] propertyFiles = file.list();
-
-        for (String propertyFile : propertyFiles) {
-            if (propertyFile.contains(".ttl")) {
-                properties.add(propertyFile);
-            }
-        }
-        return properties;
-
-    }
-
-    public static void stringToFile(String content, String fileName)
-            throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
-        writer.write(content);
-        writer.close();
-
-    }
-
-    public static String fileToString(String fileName) {
-        InputStream is;
-        String fileAsString = null;
-        try {
-            is = new FileInputStream(fileName);
-            BufferedReader buf = new BufferedReader(new InputStreamReader(is));
-            String line = buf.readLine();
-            StringBuilder sb = new StringBuilder();
-            while (line != null) {
-                sb.append(line).append("\n");
-                line = buf.readLine();
-            }
-            fileAsString = sb.toString();
-            //System.out.println("Contents : " + fileAsString);
-        } catch (Exception ex) {
-            Logger.getLogger(PropertyManagement.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        return fileAsString;
     }
+
 
     public static Map<String, String> getUriLabelsJson(File classFile) {
         Map<String, String> map = new TreeMap<String, String>();
@@ -136,10 +83,8 @@ public class PropertyManagement {
         Map<String, String> results = new TreeMap<String, String>();
         BufferedReader reader;
         String line = "";
-        File file = new File(fileName);
+       
         Integer lineNumber = 0;
-        
-               
 
         try {
             reader = new BufferedReader(new FileReader(fileName));
@@ -164,11 +109,10 @@ public class PropertyManagement {
                             object = clean(value);
                         }
                     }
-                    System.out.println("subject:" + subject + " " + "object:" + object+ "  property:" + fileName);
-                    
+                    //System.out.println("subject:" + subject + " " + "object:" + object + "  property:" + fileName);
+
                     if (lineNumber == -1)
-                         ; 
-                    else if (lineNumber == numberOfTriples) {
+                         ; else if (lineNumber == numberOfTriples) {
                         break;
                     }
 
@@ -185,15 +129,11 @@ public class PropertyManagement {
 
     }
     
-     public static Map<String, String> tripleFileToHashLabels(String fileName, Integer numberOfTriples) {
+    public static Map<String, String> tripleFileToHashLabels(String fileName, Integer numberOfTriples) {
         Map<String, String> results = new TreeMap<String, String>();
         BufferedReader reader;
         String line = "";
-        File file = new File(fileName);
         Integer lineNumber = 0;
-        
-               
-
 
         try {
             reader = new BufferedReader(new FileReader(fileName));
@@ -218,17 +158,15 @@ public class PropertyManagement {
                             object = clean(value);
                         }
                     }
-                    
+
                     if (lineNumber == -1)
-                         ; 
-                    else if (lineNumber == numberOfTriples) {
+                         ; else if (lineNumber == numberOfTriples) {
                         break;
                     }
-                    
-                    subject=cleanNotation(subject);
-                    object=cleanNotation(object);
-                    System.out.println("subject:" + subject + " " + "object:" + object);
 
+                    subject = cleanNotation(subject);
+                    object = cleanNotation(object);
+                    System.out.println("subject:" + subject + " " + "object:" + object);
 
                     results.put(subject, object);
 
@@ -243,33 +181,30 @@ public class PropertyManagement {
 
     }
 
-    public static String matchLabelsWithEntities(String propertyFile, String labelFileName, Integer numberOfTriples) {
+    public  String matchLabelsWithEntities(String propertyFile, String labelFileName, Integer numberOfTriples) {
         Map<String, String> objectLabelHash = new TreeMap<String, String>();
         BufferedReader reader;
         String line = "";
-        File file = new File(labelFileName);
         Map<String, String> propertySubObjEntities = tripleFileToHash(propertyFile, numberOfTriples);
         Map<String, String> propertyObjSubjEntities = reverseHash(propertySubObjEntities);
-        
- 
-        List<OffLineResult> offLineResults = new ArrayList<OffLineResult>();
+
+        List<TripleLable> offLineResults = new ArrayList<TripleLable>();
         String content = "";
         Integer lineNumber = 0;
         try {
             reader = new BufferedReader(new FileReader(labelFileName));
             line = reader.readLine();
-           
+
             while (line != null) {
                 line = reader.readLine();
-                
-                if (line != null&&line.contains("http"))
-                    ;
-                else {
-                    System.out.println("line::"+line+" propertyFile:"+propertyFile);
+
+                if (line != null && line.contains("http"))
+                    ; else {
+                    System.out.println("line::" + line + " propertyFile:" + propertyFile);
                     continue;
-                    
+
                 }
-                
+
                 String uri = null, label = null, subjectUri = null;
                 String subjectLabel = null, objectUri = null, objectLabel = null;
                 if (line != null) {
@@ -302,23 +237,21 @@ public class PropertyManagement {
 
                     if (subjectUri != null) {
                         lineNumber = lineNumber + 1;
-                        OffLineResult offLineResult = new OffLineResult(subjectUri, subjectLabel, objectUri, objectLabel);
+                        TripleLable offLineResult = new TripleLable(subjectUri, subjectLabel, objectUri, objectLabel);
                         offLineResults.add(offLineResult);
 
                         if (numberOfTriples == -1)
-                            ; 
-                        else if (lineNumber >= numberOfTriples) {
+                            ; else if (lineNumber >= numberOfTriples) {
                             break;
                         }
 
-                        System.out.println(lineNumber + " subject:" + offLineResult.getSubjectUri() + " subjectLabel:");
-
+                        //System.out.println(lineNumber + " subject:" + offLineResult.getSubjectUri() + " subjectLabel:");
                     }
 
                 }
             }
             Integer index = 0;
-            for (OffLineResult offLineResult : offLineResults) {
+            for (TripleLable offLineResult : offLineResults) {
                 String key = offLineResult.getObjectUri().trim().strip().stripLeading().stripTrailing();
                 String objectLabel = null;
                 //if (objectLabelHash.containsKey(key)) {
@@ -329,7 +262,7 @@ public class PropertyManagement {
                 fileLine = fileLine + "\n";
                 content += fileLine;
 
-                System.out.println(index + " subject:" + offLineResult.getSubjectUri() + " subjectLabel:" + offLineResult.getSubjectLabel()
+                System.out.println(this.language+"_"+this.property+"_"+index + " subject:" + offLineResult.getSubjectUri() + " subjectLabel:" + offLineResult.getSubjectLabel()
                         + " " + " objectUri:" + offLineResult.getObjectUri() + " " + " objectLabel:" + objectLabel);
 
                 //}
@@ -343,8 +276,8 @@ public class PropertyManagement {
 
     }
 
-    public static Map<String, OffLineResult> getEntityLabels(String propertyFile) {
-        Map<String, OffLineResult> entityLabels = new TreeMap<String, OffLineResult>();
+    public static Map<String, TripleLable> getEntityLabels(String propertyFile) {
+        Map<String, TripleLable> entityLabels = new TreeMap<String, TripleLable>();
         BufferedReader reader;
         String line = "";
         File file = new File(propertyFile);
@@ -381,7 +314,7 @@ public class PropertyManagement {
                     }
 
                     lineNumber = lineNumber + 1;
-                    OffLineResult offLineResult = new OffLineResult(subjectUri, subjectLabel, objectUri, objectLabel);
+                    TripleLable offLineResult = new TripleLable(subjectUri, subjectLabel, objectUri, objectLabel);
                     //System.out.println(lineNumber+" subject:" + subjectUri + " subjectLabel:" + subjectLabel
                     //        + " " + " objectUri:" + objectUri + " " + " objectLabel:" + objectLabel);
                     entityLabels.put(line, offLineResult);
@@ -499,30 +432,9 @@ public class PropertyManagement {
         return line;
     }
 
-    public static Set<String> getSetFromFiles(String propertyFile) {
-        Set<String> results = new TreeSet<String>();
-        BufferedReader reader;
-        String line = "";
-        File file = new File(propertyFile);
 
-        try {
-            reader = new BufferedReader(new FileReader(propertyFile));
-            while ((line = reader.readLine()) != null) {
-                line = reader.readLine();
-                results.add(line);
-            }
-
-            reader.close();
-
-        } catch (Exception ex) {
-            Logger.getLogger(PropertyManagement.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return results;
-    }
-
-    public static void getGrepCommand(String propertyDir,String propertyFile,String allTurtleFile,String language) {
-        Set<String> properties = PropertyManagement.getSetFromFiles(propertyDir+propertyFile);
+    public static void getGrepCommand(String propertyDir,String propertyFile,String allTurtleFile,String grepFile) {
+        Set<String> properties = FileUtils.getSetFromFiles(propertyDir+propertyFile);
         String content="";
         String shellFile="#!/bin/sh";
 
@@ -553,7 +465,7 @@ public class PropertyManagement {
         try {
             content=shellFile+"\n"+content;
             System.out.println(content);
-            stringToFile(content, language+"_"+GREP_COMMAND_FILE);
+            FileUtils.stringToFile(content, grepFile);
         } catch (Exception e) {
 
             e.printStackTrace();
@@ -582,7 +494,7 @@ public class PropertyManagement {
 
             process.destroy();
             if (!content.isEmpty()) {
-                stringToFile(content, propertyFile);
+                FileUtils.stringToFile(content, propertyFile);
             }
         } catch (Exception e) {
                     
@@ -592,6 +504,8 @@ public class PropertyManagement {
         }
 
     }
+
+  
 
 
 }

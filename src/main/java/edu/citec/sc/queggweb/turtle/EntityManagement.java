@@ -7,6 +7,8 @@ package edu.citec.sc.queggweb.turtle;
  */
 
 
+import edu.citec.sc.uio.StringMatcher;
+import edu.citec.sc.uio.FileUtils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author elahi
  */
-public class Entity {
+public class EntityManagement {
 
   
     public static void findAllProperties(String turtleDir, String allTriple,
@@ -44,7 +46,7 @@ public class Entity {
             Set<String> classNames = tripleFileToHash(entryFileName, numberOfTriples, type, language, null);
             System.out.println(classNames.toString());
             String content = setToFile(classNames);
-            PropertyManagement.stringToFile(content, propertyDir +"z_" +type + ".txt");
+            FileUtils.stringToFile(content, propertyDir +type + ".txt");
             System.out.println("completed!!!");
 
             /*//find entrities of each class
@@ -78,7 +80,7 @@ public class Entity {
             Set<String> classNames = tripleFileToHash(entryFileName, numberOfTriples, type, language, null);
             System.out.println(classNames.toString());
             String content = setToFile(classNames);
-            PropertyManagement.stringToFile(content, outputDir + type + ".txt");
+            FileUtils.stringToFile(content, outputDir + type + ".txt");
             System.out.println("completed!!!");
 
             /*//find entrities of each class

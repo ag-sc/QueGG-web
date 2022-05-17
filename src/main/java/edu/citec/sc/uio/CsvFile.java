@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.citec.sc.queggweb.uio;
+package edu.citec.sc.uio;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;

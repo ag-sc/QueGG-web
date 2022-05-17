@@ -1,4 +1,4 @@
-package edu.citec.sc.queggweb.turtle;
+package edu.citec.sc.uio;
 
 /*
  * To change this license header, choose License Headers in Project Properties.

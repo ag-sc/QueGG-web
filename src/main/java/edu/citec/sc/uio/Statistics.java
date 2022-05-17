@@ -1,4 +1,4 @@
-package edu.citec.sc.queggweb.uio;
+package edu.citec.sc.uio;
 
 import java.io.BufferedReader;
 import java.io.File;

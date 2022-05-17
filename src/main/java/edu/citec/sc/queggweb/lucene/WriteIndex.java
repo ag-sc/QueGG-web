@@ -30,7 +30,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
-import edu.citec.sc.queggweb.uio.CsvFile;
+import edu.citec.sc.uio.CsvFile;
 
 /**
  *

@@ -1,13 +1,14 @@
 
-
-
 import edu.citec.sc.queggweb.turtle.ConstantsQuestion;
-import edu.citec.sc.queggweb.turtle.Entity;
+import edu.citec.sc.queggweb.turtle.EntityManagement;
 import edu.citec.sc.queggweb.turtle.PropertyManagement;
-import java.util.Set;
-import java.util.TreeSet;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -24,35 +25,37 @@ public class MainTurtle implements ConstantsQuestion {
     //FIND_PROPERTY_FILES
     //FIND_LABELS_OF_ENTITIES
     public static void main(String[] args) {
-        Set<String> languages=new TreeSet<String>();
-        
-        
-        String language = language_it;
-        String languageDir = "../resources/" + language + "/";
-        String turtleDir = "../resources/" + language + "/turtle/";
-        String entittyDir = "../resources/" + language + "/entity/";
-        String propertyDir = "../resources/" + language + "/property/";
-        String allTriple = language + "_allTriples" + ".ttl";
-        Set<String> menus=new TreeSet<String>();
-        menus.add(FIND_LABELS_OF_ENTITIES);
+        List<String> languages = Stream.of(italian,german,spanish,english).collect(Collectors.toCollection(ArrayList::new));
+        List<String> menus = Stream.of(BUILD_TRIPLE_WITH_LABELS).collect(Collectors.toCollection(ArrayList::new));
 
-        if (menus.contains(FIND_PROPERTY)) {
-            Entity.findAllProperties(turtleDir, allTriple, propertyDir, language, numberOfTriples, PROPERTY);
-        }
-        if (menus.contains(FIND_PROPERTY_FILES)) {
-            PropertyManagement.getGrepCommand(propertyDir, PROPERTY+".txt",turtleDir+allTriple,language);
-        }
-        if (menus.contains(FIND_LABELS_OF_ENTITIES)) {
-            try {
-                PropertyManagement.generateProperty("../resources/" + language + "/property/",
-                         "../resources/" + language + "/turtle/" + labelFile,
-                        numberOfTriples, language);
-            } catch (Exception ex) {
-                Logger.getLogger(MainTurtle.class.getName()).log(Level.SEVERE, null, ex);
+        for (String language : languages) {
+            String languageDir = resourceDir+ language + File.separator;
+            String turtleDir = languageDir+ File.separator+ turtle+ File.separator;
+            String entittyDir = languageDir  + File.separator+ entity+ File.separator;
+            String propertyDir = languageDir + File.separator+ property+ File.separator;
+            String allTriple = mappingbased_objects+underscore +language+ ttl;
+         
+            if (menus.contains(FIND_PROPERTY)) {
+                EntityManagement.findAllProperties(turtleDir, allTriple, propertyDir, language, numberOfTriples, property);
             }
+            if (menus.contains(BUILD_PROPERTY_FILES)) {
+                String grepFile=GREP_COMMAND_FILE+underscore+language+sh;
+                PropertyManagement.getGrepCommand(propertyDir, property + txt, turtleDir + allTriple, grepFile);
+            }
+            if (menus.contains(BUILD_TRIPLE_WITH_LABELS)) {
+                String labelFile=labels+underscore+language+ttl;
+                try {
+                    PropertyManagement propertyManagement=new PropertyManagement(language);
+                    propertyManagement.generateProperty(propertyDir,
+                           turtleDir + labelFile,numberOfTriples);
+                    System.out.println("property management is completed!!!");
+                } catch (Exception ex) {
+                    Logger.getLogger(MainTurtle.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
         }
 
-        //QueGG.generateProperty(propertyDir_it,turtleDir_it+labelFile_it,numberOfTriples, language_it);
     }
 
 }
