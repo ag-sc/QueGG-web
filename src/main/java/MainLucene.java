@@ -7,11 +7,20 @@
 import edu.citec.sc.queggweb.constants.Constants;
 import edu.citec.sc.queggweb.data.Question;
 import edu.citec.sc.queggweb.data.QuestionLoader;
-import edu.citec.sc.queggweb.lucene.ReadIndex;
 import edu.citec.sc.queggweb.lucene.WriteIndex;
+import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.FIND_ENTITIES;
+import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.english;
+import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.german;
+import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.italian;
+import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.spanish;
+import edu.citec.sc.uio.CsvFile;
+import edu.citec.sc.uio.Statistics;
+import static edu.citec.sc.uio.Statistics.FolderFileCount;
+import java.io.File;
 import java.util.*;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.search.ScoreDoc;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -23,32 +32,37 @@ public class MainLucene implements Constants {
     private static Set<String> menu = new HashSet<String>();
 
     public static void main(String[] args) throws Exception {
-        //String type="_NPP_";
-        //Integer total=26798353+30704392+22753035;
-        //Integer rest=
+        List<String> menus = Stream.of(WRITE).collect(Collectors.toCollection(ArrayList::new));
+        List<String> languages = Stream.of("es","en").collect(Collectors.toCollection(ArrayList::new));
+        Set<String> frames = Stream.of("-NPP-", "-VP-", "-IPP-").collect(Collectors.toCollection(TreeSet::new));
 
-        //System.out.println(total);
-        //FolderFileCount(CSV_DIR,type);
-        menu.add(WRITE);
-        //menu.add(READ);
+        for (String language : languages) {
+            String indexDir = resourceDir + language + Constants.indexDir;
+            String questionDir = resourceDir + language + Constants.questionDir;
+            String reportFile = resourceDir + language + "/" + "total.csv";
+            File directory = new File(indexDir);
+            FileUtils.cleanDirectory(directory);
+            if (menus.contains(NUMBER_OF_QUESTIONS)) {
+                Statistics.numberQuestions(frames, questionDir, reportFile, language);
+            }
+            if (menus.contains(WRITE)) {
+                WriteIndex.writeIndex(questionDir, indexDir, testFlag, rowLimit);
+            }
+            if (menus.contains(READ)) {
+                String tokens = "place was";
+                System.out.println("search::" + tokens);
+                //LinkedHashSet<String> results = new LinkedHashSet<String>();
 
-        if (menu.contains(WRITE)) {
-            WriteIndex.writeIndex(CSV_DIR, INDEX_DIR, testFlag, rowLimit);
-        }
-        if (menu.contains(READ)) {
-            String tokens = "place was";
-            System.out.println("search::" + tokens);
-            //LinkedHashSet<String> results = new LinkedHashSet<String>();
-
-            List<Question> results = new ArrayList<Question>();
-            QuestionLoader questionLoader = new QuestionLoader();
-            //Map<String,Question> results = ReadIndex.readIndex(QUESTION_FIELD, SPARQL_FIELD,ANSWER_FIELD,tokens, 10);
-            List<Question> suggestions = questionLoader.autocomplete(tokens, 20);
-            System.out.println("result!!!!!!!");
-            for (Question result : results) {
-                System.out.println(result.getQuestion());
-                System.out.println(result.getSparql());
-                System.out.println(result.getAnswer());
+                List<Question> results = new ArrayList<Question>();
+                QuestionLoader questionLoader = new QuestionLoader();
+                //Map<String,Question> results = ReadIndex.readIndex(QUESTION_FIELD, SPARQL_FIELD,ANSWER_FIELD,tokens, 10);
+                List<Question> suggestions = questionLoader.autocomplete(Constants.indexDir, tokens, 20);
+                System.out.println("result!!!!!!!");
+                for (Question result : results) {
+                    System.out.println(result.getQuestion());
+                    System.out.println(result.getSparql());
+                    System.out.println(result.getAnswer());
+                }
             }
         }
     }

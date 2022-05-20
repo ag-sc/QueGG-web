@@ -70,6 +70,40 @@ public class EntityManagement {
         }
 
     }
+    
+    public static void processResult(String entryFileName,String language,
+            Integer numberOfTriples, String type) {
+
+        try {
+            //find classes
+            Set<String> classNames = tripleFileToHash(entryFileName, numberOfTriples, type, language, null);
+            System.out.println(classNames.toString());
+            String content = setToFile(classNames);
+            FileUtils.stringToFile(content, entryFileName.replace(".ttl", ".txt"));
+            System.out.println("completed!!!");
+
+            /*//find entrities of each class
+        for (String className : classNames) {
+            className=className.replace("http://dbpedia.org/ontology/", "");
+             
+            //String entityFileName = entityDir + className + ".ttl";
+            String resultFileName = outputDir + className + ".txt";
+            Set<String> entities = tripleFileToHash(entryFileName, numberOfTriples, SUBJECT, language,className);
+            String content = setToFile(entities, resultFileName);
+            try {
+                QueGG.stringToFile(content, resultFileName);
+            } catch (IOException ex) {
+                Logger.getLogger(QueGG.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }*/
+ /*if(!className.startsWith("E")) continue;*/
+        } catch (IOException ex) {
+            Logger.getLogger(PropertyManagement.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+    
      public static void generateEntities(String entityDir, String inputFileName,
             String outputDir, String language,
             Integer numberOfTriples, String type) {
@@ -148,7 +182,7 @@ public class EntityManagement {
                     }
                     
                    //System.out.println("subject:" + subject + " " + "object:" + object+" "+ "property:" + property+" "+className);
-                   System.out.println( "property:" + property+" "+className);
+                  
 
                     if(subject!=null&&object!=null){
                         ;
@@ -165,13 +199,17 @@ public class EntityManagement {
                             continue;
                     }
                     
-
-                   if(type.contains("subject")) 
-                      results.add(subject);
-                   else if(type.contains("object")) 
-                      results.add(object);
-                   else if(type.contains("property"))
+                    if (type.contains("subject")) {
+                        System.out.println("subject:" + subject);
+                        results.add(subject);
+                    } else if (type.contains("object")) {
+                        System.out.println("object:" + object);
+                        results.add(object);
+                    } else if (type.contains("property")) {
+                        System.out.println("property:" + property);
                         results.add(property);
+
+                    }
 
                 }
             }
@@ -192,6 +230,7 @@ public class EntityManagement {
         }
         return content;
     }
+
 
   
 

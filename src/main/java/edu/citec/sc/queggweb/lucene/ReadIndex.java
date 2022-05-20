@@ -39,8 +39,8 @@ import org.apache.lucene.util.IOUtils;
 
 public class ReadIndex implements Constants{
 
-    public static Map<String,Question> readIndex(String fieldQuestion, String fieldSparql,String fieldAnswerUri,String searchText,Integer topN) throws Exception {
-        IndexSearcher searcher = createSearcher();
+    public static Map<String,Question> readIndex(String INDEX_DIR,String fieldQuestion, String fieldSparql,String fieldAnswerUri,String searchText,Integer topN) throws Exception {
+        IndexSearcher searcher = createSearcher(INDEX_DIR);
         //final List<Question> suggestions = new ArrayList<Question>();
 
         
@@ -110,7 +110,7 @@ public class ReadIndex implements Constants{
         return hits;
     }
 
-    private static IndexSearcher createSearcher() throws IOException {
+    private static IndexSearcher createSearcher(String INDEX_DIR) throws IOException {
         Directory dir = FSDirectory.open(Paths.get(INDEX_DIR));
         IndexReader reader = DirectoryReader.open(dir);
         IndexSearcher searcher = new IndexSearcher(reader);

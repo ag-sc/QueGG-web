@@ -2,6 +2,7 @@ package edu.citec.sc.queggweb.views;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import edu.citec.sc.queggweb.constants.Constants;
 import edu.citec.sc.uio.CsvFile;
 import edu.citec.sc.queggweb.data.*;
 import lombok.val;
@@ -23,7 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RestController
-public class QueryController {
+public class QueryController implements Constants{
 
     private Cache<String, Map<String, String>> resourceCache = CacheBuilder.newBuilder()
             .maximumSize(5000)
@@ -48,6 +49,8 @@ public class QueryController {
                                      @RequestParam(name="answer", required=false, defaultValue="") String answer,
                                      Model model) {
         Map<String, Object> result = new HashMap<>();
+        String language ="es";
+        String INDEX_DIR = resourceDir+language+Constants.indexDir;
 
         result.put("query", query);
         result.put("question_count", questions.size());
@@ -55,7 +58,7 @@ public class QueryController {
         List<AutocompleteSuggestion> results =new ArrayList<AutocompleteSuggestion>();
      
         try {
-            val suggestions = questions.autocomplete(query, 10);
+            val suggestions = questions.autocomplete(INDEX_DIR,query, 10);
             results = questions.suggestionsToResults(suggestions);
             result.put("results", results);
             result.put("answer", null);

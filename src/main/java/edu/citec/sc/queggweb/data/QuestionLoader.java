@@ -292,8 +292,8 @@ public class QuestionLoader {
         return labels;
     }
     
-    public List<Question> autocomplete(String query, int topN) throws Exception {
-        Map<String,Question> results= ReadIndex.readIndex(QUESTION_FIELD, SPARQL_FIELD,ANSWER_FIELD, query, topN);
+    public List<Question> autocomplete(String INDEX_DIR,String query, int topN) throws Exception {
+        Map<String,Question> results= ReadIndex.readIndex(INDEX_DIR,QUESTION_FIELD, SPARQL_FIELD,ANSWER_FIELD, query, topN);
          List<Question> suggestions=new ArrayList<Question>();
          
         for (String questionT : results.keySet()) {

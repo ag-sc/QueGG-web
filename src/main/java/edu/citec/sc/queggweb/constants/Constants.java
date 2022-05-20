@@ -11,10 +11,14 @@ package edu.citec.sc.queggweb.constants;
  */
 public interface Constants {
 
-    public static final String INDEX_DIR = "../resources/en/index/";
-    public static final String CSV_DIR = "../resources/en/questions/";
+    //public static final String INDEX_DIR = "../resources/en/index/";
+    public static final String resourceDir = "../resources/";
+    public static final String indexDir = "/index/";
+    public static final String questionDir = "/questions/";
+
     public static final String WRITE = "WRITE";
     public static final String READ = "READ";
+    public static final String NUMBER_OF_QUESTIONS="NUMBER_OF_QUESTIONS";
     
     public static final String ID_FIELD = "id";
     public static final String QUESTION_FIELD = "firstName";

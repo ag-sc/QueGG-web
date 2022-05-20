@@ -6,7 +6,6 @@
 package edu.citec.sc.queggweb.lucene;
 
 import edu.citec.sc.queggweb.constants.Constants;
-import static edu.citec.sc.queggweb.constants.Constants.INDEX_DIR;
 import static edu.citec.sc.queggweb.constants.Constants.Limit;
 import java.io.BufferedReader;
 import java.io.File;
@@ -134,6 +133,7 @@ public class WriteIndex implements Constants{
     }*/
 
     public static IndexWriter createWriter(String INDEX_DIR) throws IOException {
+        System.out.println(INDEX_DIR);
         FSDirectory dir = FSDirectory.open(Paths.get(INDEX_DIR));
         IndexWriterConfig config = new IndexWriterConfig(new StandardAnalyzer());
         IndexWriter writer = new IndexWriter(dir, config);

@@ -35,6 +35,7 @@ public interface ConstantsQuestion {
     public static String FIND_PROPERTY = "FIND_PROPERTY";
     public static String BUILD_PROPERTY_FILES = "BUILD_PROPERTY_FILES";
     public static String BUILD_TRIPLE_WITH_LABELS = "BUILD_TRIPLE_WITH_LABELS";
+    public static String FIND_ENTITIES = "FIND_ENTITIES";
     public static String GREP_COMMAND_FILE = "grep";
 
     public static String underscore = "_";
