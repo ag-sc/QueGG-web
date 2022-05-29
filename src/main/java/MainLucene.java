@@ -32,8 +32,8 @@ public class MainLucene implements Constants {
     private static Set<String> menu = new HashSet<String>();
 
     public static void main(String[] args) throws Exception {
-        List<String> menus = Stream.of(WRITE).collect(Collectors.toCollection(ArrayList::new));
-        List<String> languages = Stream.of("es","en").collect(Collectors.toCollection(ArrayList::new));
+        List<String> menus = Stream.of(NUMBER_OF_QUESTIONS).collect(Collectors.toCollection(ArrayList::new));
+        List<String> languages = Stream.of("es","en","de","it").collect(Collectors.toCollection(ArrayList::new));
         Set<String> frames = Stream.of("-NPP-", "-VP-", "-IPP-").collect(Collectors.toCollection(TreeSet::new));
 
         for (String language : languages) {

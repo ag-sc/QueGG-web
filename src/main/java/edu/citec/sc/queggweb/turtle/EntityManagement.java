@@ -36,18 +36,16 @@ import org.apache.commons.lang3.StringUtils;
 public class EntityManagement {
 
   
-    public static void findAllProperties(String turtleDir, String allTriple,
-            String propertyDir, String language,
+    public static String  findAllProperties(String turtleDir, String turtleFile,
+            String language,
             Integer numberOfTriples, String type) {
-        String entryFileName = turtleDir + allTriple;
+        String entryFileName = turtleDir + turtleFile;
+         String content =null;
 
-        try {
             //find classes
             Set<String> classNames = tripleFileToHash(entryFileName, numberOfTriples, type, language, null);
             System.out.println(classNames.toString());
-            String content = setToFile(classNames);
-            FileUtils.stringToFile(content, propertyDir +type + ".txt");
-            System.out.println("completed!!!");
+            content = setToFile(classNames);
 
             /*//find entrities of each class
         for (String className : classNames) {
@@ -65,9 +63,9 @@ public class EntityManagement {
 
         }*/
  /*if(!className.startsWith("E")) continue;*/
-        } catch (IOException ex) {
-            Logger.getLogger(PropertyManagement.class.getName()).log(Level.SEVERE, null, ex);
-        }
+       
+        
+         return content;
 
     }
     
@@ -200,13 +198,13 @@ public class EntityManagement {
                     }
                     
                     if (type.contains("subject")) {
-                        System.out.println("subject:" + subject);
+                        System.out.println("subject:" + subject+" fileName:"+fileName);
                         results.add(subject);
                     } else if (type.contains("object")) {
-                        System.out.println("object:" + object);
+                        System.out.println("object:" + object+" fileName:"+fileName);
                         results.add(object);
                     } else if (type.contains("property")) {
-                        System.out.println("property:" + property);
+                        System.out.println("property:" + property+" fileName:"+fileName);
                         results.add(property);
 
                     }

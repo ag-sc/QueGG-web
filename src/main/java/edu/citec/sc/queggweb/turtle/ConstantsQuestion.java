@@ -18,7 +18,6 @@ public interface ConstantsQuestion {
     public static String italian = "it";
     public static String german = "de";
     public static String spanish = "es";
-    public static Integer numberOfTriples = -1;
 
     public static String subject = "subject";
     public static String property = "property";
@@ -29,10 +28,16 @@ public interface ConstantsQuestion {
 
     public static String instance_types = "instance_types";
     public static String labels = "labels";
+    
     public static String mappingbased_objects = "mappingbased_objects";
     public static String persondata = "persondata";
+    public static String infobox_properties = "infobox_properties";
+    public static String specific_mappingbased_properties="specific_mappingbased_properties";
+    
+    
 
     public static String FIND_PROPERTY = "FIND_PROPERTY";
+
     public static String BUILD_PROPERTY_FILES = "BUILD_PROPERTY_FILES";
     public static String BUILD_TRIPLE_WITH_LABELS = "BUILD_TRIPLE_WITH_LABELS";
     public static String FIND_ENTITIES = "FIND_ENTITIES";
