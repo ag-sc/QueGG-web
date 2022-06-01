@@ -32,7 +32,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.File;  
 import java.io.FileInputStream;  
+import java.io.FileOutputStream;
 import java.io.IOException;  
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import static java.lang.System.exit;
  
 
@@ -49,11 +52,6 @@ public class CsvFile  {
     private List<String[]> rows = new ArrayList<String[]>();
     private static Logger LOGGER = null;
 
-    public CsvFile(File filename, Logger LOGGER) {
-        this.filename = filename;
-        this.LOGGER = LOGGER;
-    }
-
     public CsvFile(File filename) {
         this.filename = filename;
 
@@ -67,7 +65,11 @@ public class CsvFile  {
             System.err.println("writing csv file failed!!!");
             return;
         }
-        try ( CSVWriter writer = new CSVWriter(new FileWriter(this.filename))) {
+
+        try {
+            FileOutputStream fos = new FileOutputStream(this.filename);
+            OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
+            CSVWriter writer = new CSVWriter(osw);
             writer.writeAll(csvData);
         } catch (IOException ex) {
             System.err.println("writing csv file failed!!!" + ex.getMessage());
@@ -75,6 +77,9 @@ public class CsvFile  {
     }
 
     public void writeToCSV(File newQaldFile, List<String[]> csvData) {
+         System.out.println("csvData::" + csvData.size());
+         System.out.println("newQaldFile::" + newQaldFile);
+
         if (csvData.isEmpty()) {
             System.err.println("writing csv file failed!!!");
             return;
@@ -99,10 +104,9 @@ public class CsvFile  {
     }
 
    
-    public List<String[]> getManualRow(File qaldFile, Integer lineLimit) {
+    public List<String[]> getManualRow(File qaldFile, long lineLimit) {
         List<String[]> rows = new ArrayList<String[]>();
 
-        Stack<String> stack = new Stack<String>();
         CSVReader reader;
         try {
             System.out.println(qaldFile.getName()+" "+lineLimit);
@@ -217,7 +221,7 @@ public class CsvFile  {
 
   
 
-    private List<String[]> generateLinebyLine(File pathToCsv, Integer lineLimit) throws FileNotFoundException, IOException {
+    private List<String[]> generateLinebyLine(File pathToCsv, long lineLimit) throws FileNotFoundException, IOException {
         List<String[]> rows = new ArrayList<String[]>();
         BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv));
         String line = null;

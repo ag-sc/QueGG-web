@@ -15,7 +15,7 @@
 	<description>QueGG QA web interface</description>
 	<properties>
 		<java.version>11</java.version>
-		<start-class>edu.citec.sc.queggweb.QueggWebApplication</start-class>
+		<start-class>edu.citec.sc.queggweb.MainLuceneIndex</start-class>
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<lucene.version>6.6.0</lucene.version>
 	</properties>

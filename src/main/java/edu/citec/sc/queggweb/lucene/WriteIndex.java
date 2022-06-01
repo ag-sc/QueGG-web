@@ -59,7 +59,7 @@ public class WriteIndex implements Constants{
                 for (String[] row : rows) {
                     index = index + 1;
                     Boolean flag = false;
-                    String id = null, question = null, sparql = null, answer = null;
+                    String id = null, question = null, sparql = null, answerUri = null,answerLabel=null;
                     try {
                         //id = row[0].replace("\"", "");
                         //question = row[1].replace("\"", "");
@@ -68,17 +68,18 @@ public class WriteIndex implements Constants{
                         id = row[0];
                         question = row[1].replace("\"", "");
                         sparql = row[2].replace("\"", "");
-                        answer = row[3].replace("\"", "");
+                        answerUri = row[3].replace("\"", "");
+                        answerLabel = row[3].replace("\"", "");
                         if(question.contains(" null ")|question.contains(" null?"))
                             continue;
                         flag = true;
                     } catch (Exception ex) {
-
+                       throw new Exception(" something is wrong"+question+ " "+ sparql+" "+answerUri);
                     }
                     if (flag) {
                         //System.out.println(index + " " + question + " ");
-                        System.out.println(index + " " + question + " " + sparql + " " + answer + " " + file.getName());
-                        Document document = createDocument(id, question,sparql,answer);
+                        System.out.println(index + " " + question + " " + sparql + " " + answerUri + " " + file.getName());
+                        Document document = createDocument(id, question,sparql,answerUri,answerLabel);
                         //writer.addDocument(document);
                         //writer.commit();
                         documents.add(document);
@@ -114,12 +115,13 @@ public class WriteIndex implements Constants{
 
     }
     
-    public static Document createDocument(String id, String question,String sparql,String website) {
+    public static Document createDocument(String id, String question,String sparql,String answer,String answerLabel) {
         Document document = new Document();
         document.add(new StringField(ID_FIELD, id, Field.Store.YES));
         document.add(new TextField(QUESTION_FIELD, question, Field.Store.YES));
         document.add(new TextField(SPARQL_FIELD, sparql, Field.Store.YES));
-        document.add(new TextField(ANSWER_FIELD, website, Field.Store.YES));
+        document.add(new TextField(ANSWER_FIELD, answer, Field.Store.YES));
+        document.add(new TextField(ANSWER_LABEL, answerLabel, Field.Store.YES));
         return document;
     }
     

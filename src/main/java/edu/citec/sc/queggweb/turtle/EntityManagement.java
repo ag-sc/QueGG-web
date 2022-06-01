@@ -36,16 +36,16 @@ import org.apache.commons.lang3.StringUtils;
 public class EntityManagement {
 
   
-    public static String  findAllProperties(String turtleDir, String turtleFile,
+    public static Set<String>  findAllProperties(String entryFileName,
             String language,
             Integer numberOfTriples, String type) {
-        String entryFileName = turtleDir + turtleFile;
+        //String entryFileName = turtleDir + turtleFile;
          String content =null;
 
             //find classes
             Set<String> classNames = tripleFileToHash(entryFileName, numberOfTriples, type, language, null);
             System.out.println(classNames.toString());
-            content = setToFile(classNames);
+            //content = setToFile(classNames);
 
             /*//find entrities of each class
         for (String className : classNames) {
@@ -65,7 +65,7 @@ public class EntityManagement {
  /*if(!className.startsWith("E")) continue;*/
        
         
-         return content;
+         return classNames;
 
     }
     
@@ -228,6 +228,8 @@ public class EntityManagement {
         }
         return content;
     }
+    
+    
 
 
   

@@ -15,7 +15,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -95,5 +103,107 @@ public class FileUtils {
 
         return results;
     }
+    
+     public static Set<String> getProperties(String propertyFile) {
+        Set<String> results = new TreeSet<String>();
+
+        Path path = Paths.get(propertyFile);
+
+        try {
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for (String line : lines) {
+                if (line.contains("=")) {
+                    String[] info = line.split("=");
+                    String key = Matcher.cleanPrefix(info[0]);
+                    results.add(key);
+                }
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+    
+    public static Map<String, String> getHashFromFiles(String propertyFile) {
+        Map<String, String> results = new TreeMap<String, String>();
+        BufferedReader reader;
+        String line = "";
+        File file = new File(propertyFile);
+
+        try {
+            reader = new BufferedReader(new FileReader(propertyFile));
+            while ((line = reader.readLine()) != null) {
+                line = reader.readLine();
+                 if (line!=null) {
+                     ;
+                 }
+                 else 
+                     continue;
+                if (line.contains("=")) {
+                    String[] info = line.split("=");
+                    results.put(info[0], info[1]);
+                }
+
+            }
+
+            reader.close();
+
+        } catch (Exception ex) {
+            Logger.getLogger(PropertyManagement.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return results;
+    }
+    
+    public static <T> Set<T> findCommonElements(List<T> first, List<T> second) {
+        Set<T> common = new HashSet<>(first);
+        common.retainAll(second);
+        return common;
+    }
+
+    public static Set<String> getHashFromFile(String propertyFile) {
+         Set<String> results = new TreeSet<String>();
+
+        Path path = Paths.get(propertyFile);
+
+        try {
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for (String line : lines) {
+                if (line.contains("=")) {
+                    String[] info = line.split("=");
+                    String key = Matcher.cleanPrefix(info[0]);
+                    results.add(key);
+                }
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+    
+    public static Set<String> getSetFromFile(String propertyFile) {
+        Set<String> results = new TreeSet<String>();
+
+        Path path = Paths.get(propertyFile);
+
+        try {
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for (String line : lines) {
+                line = line.strip().stripLeading().stripTrailing().trim();
+                line = Matcher.cleanPrefix(line);
+                results.add(line);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
 
 }

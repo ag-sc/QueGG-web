@@ -16,14 +16,18 @@ public interface Constants {
     public static final String indexDir = "/index/";
     public static final String questionDir = "/questions/";
 
-    public static final String WRITE = "WRITE";
-    public static final String READ = "READ";
+    public static final String WRITE_INDEX = "WRITE";
+    public static final String READ_INDEX = "READ";
     public static final String NUMBER_OF_QUESTIONS="NUMBER_OF_QUESTIONS";
+    public static final String DUPLICATE_REMOVER="DUPLICATE_REMOVER";
+
     
     public static final String ID_FIELD = "id";
     public static final String QUESTION_FIELD = "firstName";
     public static final String SPARQL_FIELD = "lastName";
     public static final String ANSWER_FIELD = "website";
+    public static final String ANSWER_LABEL = "label";
+
 
     public static final Integer Limit=500;
     public static final Integer batchSize=10000;

@@ -19,9 +19,14 @@ public interface ConstantsQuestion {
     public static String german = "de";
     public static String spanish = "es";
 
-    public static String subject = "subject";
-    public static String property = "property";
-    public static String object = "object";
+    public static String SUBJECT = "subject";
+    public static String PROPERTY = "property";
+    public static String ENITY = "entity";
+
+    public static String PROPERTY_MARCH = "propertyMatch";
+    public static String PROPERTY_NOT_MARCH = "propertyNotMatch";
+
+    public static String OBJECT = "object";
     public static String turtle = "turtle";
     public static String entity = "entity";
     public static String resourceDir = "../resources/";
@@ -33,13 +38,23 @@ public interface ConstantsQuestion {
     public static String persondata = "persondata";
     public static String infobox_properties = "infobox_properties";
     public static String specific_mappingbased_properties="specific_mappingbased_properties";
-    
+    public static String mappingbased_literals="mappingbased_literals";
+    public static String mappingbased_objects_disjoint_domain="mappingbased_objects_disjoint_domain";
+    public static String mappingbased_objects_disjoint_range="mappingbased_objects_disjoint_range";
+
     
 
     public static String FIND_PROPERTY = "FIND_PROPERTY";
 
     public static String BUILD_PROPERTY_FILES = "BUILD_PROPERTY_FILES";
-    public static String BUILD_TRIPLE_WITH_LABELS = "BUILD_TRIPLE_WITH_LABELS";
+    public static String BUILD_TRIPLE_WITH_LABELS_PROPERTY = "BUILD_TRIPLE_WITH_LABELS";
+    public static String BUILD_TRIPLE_WITH_LABELS_ENTITY = "BUILD_TRIPLE_WITH_LABELS_ENTITY";
+
+   
+    
+
+
+    
     public static String FIND_ENTITIES = "FIND_ENTITIES";
     public static String GREP_COMMAND_FILE = "grep";
 

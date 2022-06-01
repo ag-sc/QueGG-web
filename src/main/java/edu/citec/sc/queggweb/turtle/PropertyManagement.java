@@ -9,6 +9,7 @@ package edu.citec.sc.queggweb.turtle;
 import edu.citec.sc.uio.StringMatcher;
 import edu.citec.sc.uio.FileUtils;
 import java.io.*;
+import static java.lang.System.exit;
 import java.util.*;
 import java.util.List;
 import java.util.Map;
@@ -31,13 +32,32 @@ public class PropertyManagement implements ConstantsQuestion{
        this.language=langaugeT; 
     }
 
-    public  void generateProperty(String propertyInputDir, String labelFileName, Integer numberOfTriples) throws Exception {
+    public  void generateProperty(String propertyInputDir, String labelFileName, Integer numberOfTriples, Set<String> exitProp) throws Exception {
+       
         Set<String> properties = FileUtils.getFiles(propertyInputDir);
+        
+        System.out.println(properties);
         if (properties.isEmpty()) {
             throw new Exception("No property file to process!!");
         }
 
         for (String propertyT : properties) {
+            /*if(propertyT.startsWith("dbo_a")||propertyT.startsWith("dbo_b")
+                    ||propertyT.startsWith("dbo_c")||propertyT.startsWith("dbo_d")
+                    ||propertyT.startsWith("dbo_e")||propertyT.startsWith("dbo_f")
+                    ||propertyT.startsWith("dbo_g")||propertyT.startsWith("dbo_h")
+                    ||propertyT.startsWith("dbo_i")||propertyT.startsWith("dbo_j")
+                    ||propertyT.startsWith("dbo_k")||propertyT.startsWith("dbo_l")
+                    ||propertyT.startsWith("dbo_m")||propertyT.startsWith("dbo_n")
+                    ||propertyT.startsWith("dbo_o")||propertyT.startsWith("dbo_p")
+                    ||propertyT.startsWith("dbo_q")||propertyT.startsWith("dbo_r")){
+                continue;
+            }*/
+            String propertyMatch=propertyT.replace(".ttl", "");
+            if(exitProp.contains(propertyMatch)){
+                //System.out.println("propertyMatch::"+propertyMatch);
+                continue;
+            }                
             this.property=propertyT;
             String propertyFile = propertyInputDir + propertyT;
             String content = matchLabelsWithEntities(propertyFile, labelFileName, numberOfTriples);
@@ -51,7 +71,38 @@ public class PropertyManagement implements ConstantsQuestion{
         }
 
     }
+    
+    
+    
+    public void generatePropertyFromList(String propertyDir, String propertyFile, String labelFileName, Integer numberOfTriples, Set<String> exitProp) throws Exception {
+        Set<String> properties = FileUtils.getSetFromFile(propertyFile);
+        if (properties.isEmpty()) {
+            throw new Exception("No property file to process!!");
+        }
 
+        for (String propertyT : properties) {
+            String propertyMatch = propertyT.replace(".ttl", "");
+            if (exitProp.contains(propertyMatch)) {
+                //System.out.println("propertyMatch::"+propertyMatch);
+                continue;
+            }
+            this.property = propertyT;
+           
+            propertyFile = propertyDir + propertyT+".ttl";
+             System.out.println("property::"+propertyFile);
+            /*String content = matchLabelsWithEntities(propertyFile, labelFileName, numberOfTriples);
+            try {
+                propertyFile = propertyFile.replace(ttl, txt);
+                FileUtils.stringToFile(content, propertyFile);
+            } catch (IOException ex) {
+                Logger.getLogger(PropertyManagement.class.getName()).log(Level.SEVERE, null, ex);
+            }*/
+
+        }
+
+    }
+
+  
 
     public static Map<String, String> getUriLabelsJson(File classFile) {
         Map<String, String> map = new TreeMap<String, String>();
@@ -431,39 +482,30 @@ public class PropertyManagement implements ConstantsQuestion{
         line=line.strip().stripLeading().stripTrailing().trim();
         return line;
     }
+    
+     public static void getGrepCommand(String propertyDir, String propertyFile, String allTurtleFile, String grepFile) {
+        Map<String, String> properties= FileUtils.getHashFromFiles(propertyDir + propertyFile);
+        String content = "";
+        String shellFile = "#!/bin/sh";
 
+        for (String property : properties.keySet()) {
+            allTurtleFile=properties.get(property);
+            String prefix = null, propertyName = null;
 
-    public static void getGrepCommand(String propertyDir,String propertyFile,String allTurtleFile,String grepFile) {
-        Set<String> properties = FileUtils.getSetFromFiles(propertyDir+propertyFile);
-        String content="";
-        String shellFile="#!/bin/sh";
+            prefix = StringMatcher.getPrefix(property);
+            propertyName = StringMatcher.removeResourceUri(property);
 
-        for (String property : properties) {
-            String prefix=null,propertyName=null;
-            
-            prefix=StringMatcher.getPrefix(property);
-            propertyName=StringMatcher.removeResourceUri(property);
-            
             if (prefix != null)
-                ; else
+                ; else {
                 continue;
-            /*if (property.contains("http://dbpedia.org/ontology/")) {
-               prefix="dbo_";
             }
-            else if (property.contains("http://dbpedia.org/property/")) {
-                prefix="dbp_";
-            }*/
-          
-            //propertyName=property.replace("http://dbpedia.org/ontology/", "");
-            String command = "grep " + "'" + "<" + property + ">" + "'" + " " + allTurtleFile + ">>" +propertyDir+prefix+propertyName+".ttl";
-            content+=command+"\n";
+            String command = "grep " + "'" + "<" + property + ">" + "'" + " " + allTurtleFile + ">>" + propertyDir + prefix + propertyName + ".ttl";
+            content += command + "\n";
             System.out.println(command);
-            //command = "grep " + "'" + "<" + property + ">" + "'" + " " + allTurtleFile;
-            //executeGrep(command,propertyDir+prefix+propertyName+".ttl");
         }
-        
+
         try {
-            content=shellFile+"\n"+content;
+            content = shellFile + "\n" + content;
             System.out.println(content);
             FileUtils.stringToFile(content, grepFile);
         } catch (Exception e) {
@@ -471,9 +513,41 @@ public class PropertyManagement implements ConstantsQuestion{
             e.printStackTrace();
 
         }
-       
 
     }
+
+
+    /*public static void getGrepCommand(String propertyDir, String propertyFile, String allTurtleFile, String grepFile) {
+        Set<String> properties = FileUtils.getSetFromFiles(propertyDir + propertyFile);
+        String content = "";
+        String shellFile = "#!/bin/sh";
+
+        for (String property : properties) {
+            String prefix = null, propertyName = null;
+
+            prefix = StringMatcher.getPrefix(property);
+            propertyName = StringMatcher.removeResourceUri(property);
+
+            if (prefix != null)
+                ; else {
+                continue;
+            }
+            String command = "grep " + "'" + "<" + property + ">" + "'" + " " + allTurtleFile + ">>" + propertyDir + prefix + propertyName + ".ttl";
+            content += command + "\n";
+            System.out.println(command);
+        }
+
+        try {
+            content = shellFile + "\n" + content;
+            System.out.println(content);
+            FileUtils.stringToFile(content, grepFile);
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+    }*/
     
     private static void executeGrep(String command, String propertyFile) {
         Process process = null;

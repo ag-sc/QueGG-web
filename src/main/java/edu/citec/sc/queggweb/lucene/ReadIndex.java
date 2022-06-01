@@ -39,7 +39,7 @@ import org.apache.lucene.util.IOUtils;
 
 public class ReadIndex implements Constants{
 
-    public static Map<String,Question> readIndex(String INDEX_DIR,String fieldQuestion, String fieldSparql,String fieldAnswerUri,String searchText,Integer topN) throws Exception {
+    public static Map<String,Question> readIndex(String INDEX_DIR,String searchText,Integer topN) throws Exception {
         IndexSearcher searcher = createSearcher(INDEX_DIR);
         //final List<Question> suggestions = new ArrayList<Question>();
 
@@ -66,17 +66,27 @@ public class ReadIndex implements Constants{
            System.out.println("search Text :: "+searchText);
         for (ScoreDoc sd : foundDocs2.scoreDocs) {
             Document d = searcher.doc(sd.doc);
-            String questionT=String.format(d.get(fieldQuestion));
+            String questionT="no questions",answerT="No Answer",sparqlT="no sparql",label="no label";
+            questionT =d.get(QUESTION_FIELD);
+            sparqlT = d.get(SPARQL_FIELD);
+            answerT= d.get(ANSWER_FIELD);
+            
             //questionT=questionT.toLowerCase();
-            String sparqlT =String.format(d.get(fieldSparql));
-            String answerT =String.format(d.get(fieldAnswerUri));
+            /*System.out.println(QUESTION_FIELD+" questionT::" +questionT);
+            System.out.println(SPARQL_FIELD+"  fieldSparql::" + sparqlT);
+            System.out.println(ANSWER_FIELD+" fieldAnswerUri::" + answerT);
+             System.out.println(label+" label::" + d.get(ANSWER_LABEL));*/
+            //String sparqlT = String.format(d.get(fieldSparql));
+            /*if (fieldAnswerUri.contains("http")) {
+                answerT = String.format(d.get(fieldAnswerUri));
+            }*/
             Question question = new Question(questionT, sparqlT, answerT);
-            results.put(question.getQuestion(),question);
-            index=index+1;
-            if(index>topN){
+            results.put(question.getQuestion(), question);
+            index = index + 1;
+            if (index > topN) {
                 break;
             }
-                
+
         }
         
         /*for (String questionT : results) {
@@ -111,6 +121,7 @@ public class ReadIndex implements Constants{
     }
 
     private static IndexSearcher createSearcher(String INDEX_DIR) throws IOException {
+        System.out.println("INDEX_DIR::"+INDEX_DIR);
         Directory dir = FSDirectory.open(Paths.get(INDEX_DIR));
         IndexReader reader = DirectoryReader.open(dir);
         IndexSearcher searcher = new IndexSearcher(reader);
