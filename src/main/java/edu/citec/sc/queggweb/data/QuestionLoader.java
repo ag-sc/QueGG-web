@@ -3,6 +3,10 @@ package edu.citec.sc.queggweb.data;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderHeaderAware;
+import static edu.citec.sc.queggweb.constants.Constants.ANSWER_FIELD;
+import static edu.citec.sc.queggweb.constants.Constants.QUESTION_FIELD;
+import static edu.citec.sc.queggweb.constants.Constants.SPARQL_FIELD;
+import edu.citec.sc.queggweb.lucene.ReadIndex;
 import edu.citec.sc.queggweb.views.AutocompleteSuggestion;
 import lombok.Getter;
 import lombok.Synchronized;
@@ -18,23 +22,29 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.*;
-import java.nio.charset.StandardCharsets;
+import org.apache.commons.io.IOUtils;
 
 @Component("questions")
 @Scope("singleton")
 public class QuestionLoader {
+    private static final String CACHE_FILENAME = loadCacheFilename();
+    private static final String InputDir =  "../resources/";
+
     @Autowired
     public EndpointConfiguration endpoint;
 
-    private static String getCacheFilename() {
+    private static String loadCacheFilename() {
         String envValue = System.getenv("QUEGG_TRIECACHE");
         if (envValue != null && !envValue.equals("")) {
             return envValue;
         }
 
         // default value
-        return "/tmp/trie.cache";
+        //return "/tmp/trie.cache";
+       return InputDir+"trie.cache";
     }
 
     private final int MAX_CHILD_SAMPLES = 200;
@@ -51,12 +61,10 @@ public class QuestionLoader {
 
     private class InsertTask implements Runnable {
 
-        private final String subtreeName;
         private final Trie<Question> trie;
         private final Question q;
 
-        public InsertTask(String subtreeName, Trie<Question> trie, Question q) {
-            this.subtreeName = subtreeName;
+        public InsertTask(Trie<Question> trie, Question q) {
             this.trie = trie;
             this.q = q;
         }
@@ -65,7 +73,7 @@ public class QuestionLoader {
         public void run() {
             try {
                 int sizeBefore = trie.size();
-                trie.insert(subtreeName, q.getQuestion(), q);
+                trie.insert(q.getQuestion(), q);
             } catch (TrieNode.DuplicateInsertException e) {
                 System.err.println(e.getMessage());
             }
@@ -76,65 +84,83 @@ public class QuestionLoader {
         }
     }
 
-    private void loadFromInputStream(final String target, final String streamName, InputStream is) throws IOException {
+    private void loadFromInputStream(final String streamName, InputStream is) throws IOException {
         assert is != null;
 
         int coreCount = Runtime.getRuntime().availableProcessors();
         int threadCount = coreCount > 2 ? coreCount - 2 : 2;
 
-        val in = new BufferedReader(new InputStreamReader(is));
-        CSVReaderHeaderAware reader = null;
-        try {
-            reader = new CSVReaderHeaderAware(in);
-        } catch (NullPointerException npe) {
-            System.err.println("no header found, skipping stream " + streamName);
-            return;
-        }
+        File files = new File(InputDir);
 
-        System.err.println("Starting ingest with " + threadCount + " threads");
-        ExecutorService ingestPool = Executors.newFixedThreadPool(threadCount);
-
-        Map<String, String> row;
-        while ((row = reader.readMap()) != null) {
-            String question = row.get("question");
-
-            if (question == null) {
-                throw new RuntimeException("failed to parse " + streamName + ": question is null or header malformed/missing");
-            }
-
-            if (question.trim().startsWith("SELECT ") && question.trim().endsWith("}")) {
-                System.err.println("skipping malformed question: " + question);
+        for (String fileName : files.list()) {
+            if(!fileName.contains(".csv"))
                 continue;
+            
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!fileName::"+InputDir+fileName);
+            
+             File file=new File(fileName);
+            CSVReaderHeaderAware reader = null;
+            try {
+                //File file = new File("src/main/resources/questions.csv");
+                InputStream fileStream = new FileInputStream(file);
+                val in = new BufferedReader(new InputStreamReader(fileStream));
+
+                reader = new CSVReaderHeaderAware(in);
+            } catch (Exception npe) {
+                System.err.println("no header found, skipping stream " + streamName);
+                return;
             }
 
-            String sparql = row.get("sparql");
-            String answer = row.get("answer");
+            System.err.println("Starting ingest with " + threadCount + " threads");
+            ExecutorService ingestPool = Executors.newFixedThreadPool(threadCount);
 
-            System.err.println("inserting question (" + row.getOrDefault("id", question) + ")");
-            Question q = new Question(question, sparql, answer);
+            Map<String, String> row;
+            Integer index=0;
+            while ((row = reader.readMap()) != null) {
+                index=index+1;
+                String question = row.get("question");
+                question = question.replace("\"", "");
 
-            // file imports can only target the default subtree
-            InsertTask task = new InsertTask(target, trie, q);
-            ingestPool.submit(task);
+                if (question == null) {
+                    throw new RuntimeException("failed to parse " + streamName + ": question is null or header malformed/missing");
+                }
+
+                if (question.trim().startsWith("SELECT ") && question.trim().endsWith("}")) {
+                    System.err.println("skipping malformed question: " + question);
+                    continue;
+                }
+
+                String sparql = row.get("sparql");
+                sparql = sparql.replace("\"", "");
+                String answer = row.get("answer");
+                answer = answer.replace("\"", "");
+                
+                System.out.println(index+" "+question+" "+answer);
+                System.err.println("inserting question (" + row.getOrDefault("id", question) + ")");
+                Question q = new Question(question, sparql, answer,answer,"single");
+
+                InsertTask task = new InsertTask(trie, q);
+                ingestPool.submit(task);
+            }
+
+            ingestPool.shutdown();
+            System.out.println("waiting for ingest service to complete");
+
+            try {
+                ingestPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            System.err.println("ingestion complete (" + threadCount + " threads terminated)");
+            trie.store(CACHE_FILENAME);
         }
-
-        ingestPool.shutdown();
-        System.out.println("waiting for ingest service to complete");
-
-        try {
-            ingestPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.err.println("ingestion complete (" + threadCount + " threads terminated)");
-        trie.store(getCacheFilename());
     }
 
-    private void loadFromCSV(final String target) throws IOException {
+    private void loadFromCSV() throws IOException {
         try (InputStream is = Thread.currentThread().getContextClassLoader()
                 .getResourceAsStream("data/questions.csv")) {
-            loadFromInputStream(target, "resource-stream", is);
+            loadFromInputStream("resource-stream", is);
             trie.dump(true);
         }
     }
@@ -142,17 +168,17 @@ public class QuestionLoader {
     public QuestionLoader() throws IOException {
         loadFromCache();
         if (trie.size() == 0) {
-            loadFromCSV("default");
+            loadFromCSV();
         }
 
-        loadDefaultFromExternalCSVs();
+        loadExternalCSVs();
     }
 
-    private int loadDefaultFromExternalCSVs() throws IOException {
-        return loadExternalCSVs("default", "/tmp", "glob:/tmp/question*.csv");
+    private int loadExternalCSVs() throws IOException {
+        return loadExternalCSVs("/tmp", "glob:/tmp/question*.csv");
     }
 
-    public int loadExternalCSVs(final String target, String baseDirectory, String globPattern) throws IOException {
+    public int loadExternalCSVs(String baseDirectory, String globPattern) throws IOException {
         PathMatcher matcher = FileSystems.getDefault().getPathMatcher(globPattern);
 
         int prevSize = trie.size();
@@ -162,13 +188,11 @@ public class QuestionLoader {
                     continue;
                 }
                 if (matcher.matches(child)) {
-
                     try (InputStream is = Files.newInputStream(child, StandardOpenOption.READ)) {
                         System.err.println("loading " + child + ", trie size: " + trie.size());
-
-                        loadFromInputStream(target, child.getFileName().toString(), is);
+                        loadFromInputStream(child.getFileName().toString(), is);
                         System.err.println("new trie size: " + trie.size());
-                        trie.store(getCacheFilename());
+                        trie.store(CACHE_FILENAME);
                     }
                 }
             }
@@ -179,20 +203,14 @@ public class QuestionLoader {
 
     private void loadFromCache() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        File infile = new File(getCacheFilename());
+        File infile = new File(CACHE_FILENAME);
         if (infile.exists()) {
             val trie_root = mapper.readValue(infile,
-                    new TypeReference<Map<String, TrieNode<Question>>>() {
+                    new TypeReference<TrieNode<Question>>() {
                     });
             fixParents(trie_root, null);
-            trie.setRoots(trie_root);
+            trie.setRoot(trie_root);
             System.out.println("restored trie from cache. size: " + trie.size());
-        }
-    }
-
-    private void fixParents(Map<String, TrieNode<Question>> trie_roots, TrieNode<Question> parent) {
-        for (String subtree: trie_roots.keySet()) {
-            fixParents(trie_roots.get(subtree), parent);
         }
     }
 
@@ -211,7 +229,7 @@ public class QuestionLoader {
         return this.loaded;
     }
 
-    public List<AutocompleteSuggestion> suggestionsToResults(List<TrieNode<Question>> suggestions) {
+    /*public List<AutocompleteSuggestion> suggestionsToResultsT(List<TrieNode<Question>> suggestions) {
         val sparqlResourceLabels = this.gatherSparqlResourceLabels(suggestions);
         val results = new ArrayList<AutocompleteSuggestion>();
         for (TrieNode<Question> node: suggestions) {
@@ -222,6 +240,16 @@ public class QuestionLoader {
                 suggestion.align(sparqlResourceLabels);
             }
             results.add(suggestion);
+        }
+        return results;
+    }*/
+    
+     public List<AutocompleteSuggestion> suggestionsToResults(List<Question> suggestions) {
+        val results = new ArrayList<AutocompleteSuggestion>();
+        for (Question question: suggestions) {
+            AutocompleteSuggestion autocompleteSuggestion = new AutocompleteSuggestion(question);
+            autocompleteSuggestion.setLeaf(true);
+            results.add(autocompleteSuggestion);
         }
         return results;
     }
@@ -264,17 +292,33 @@ public class QuestionLoader {
 
         return labels;
     }
+    
+    public List<Question> autocomplete(String INDEX_DIR,String query, int topN) throws Exception {
+        System.out.println("read index:::"+query);
+        Map<String,Question> results= ReadIndex.readIndex(INDEX_DIR, query, topN);
+         List<Question> suggestions=new ArrayList<Question>();
+         
+        for (String questionT : results.keySet()) {
+            Question question =results.get(questionT);
+            //System.out.println("questionT::"+question.getQuestion()+" sparql::"+question.getSparql()+" answer:"+question.getAnswer());
+            //String sparqlT = "select  ?o    {    <http://dbpedia.org/resource/Lower_Canada> <http://dbpedia.org/ontology/capital>  ?o    }";
+            //String answerT = "Quebec City";
+            //Question question = new Question(questionT, sparqlT, answerT);
+            suggestions.add(question);   
+        }
+        return suggestions;
+    }
 
-    public List<TrieNode<Question>> autocomplete(String subtree, String query, int topN, int maxDepth) {
+    /*public List<TrieNode<Question>> autocomplete(String query, int topN, int maxDepth) {
         final List<TrieNode<Question>> suggestions = new ArrayList<>();
 
-        if (this.trie == null || this.trie.getRoot(subtree) == null) {
+        if (this.trie == null || this.trie.getRoot() == null) {
             // no questions loaded into trie yet
             System.err.println("[warning] autocomplete failed: no data in trie");
             return suggestions;
         }
 
-        TrieNode<Question> cur = this.trie.getRoot(subtree).find(query, true);
+        TrieNode<Question> cur = this.trie.getRoot().find(query, true);
 
         this.gatherResults(query, suggestions, cur, topN, maxDepth, 0, false, false);
         boolean extendedBySpace = false;
@@ -291,7 +335,7 @@ public class QuestionLoader {
         }
 
         return suggestions;
-    }
+    }*/
 
     private void gatherResults(String query, List<TrieNode<Question>> suggestions, TrieNode<Question> cur, int topN, int maxDepth, int curDepth, boolean skipcur, boolean leafs) {
         if (curDepth >= maxDepth) {

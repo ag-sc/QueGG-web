@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import static java.lang.System.exit;
 
 @Controller
 public class UploadController {
@@ -39,32 +40,34 @@ public class UploadController {
     @PostMapping("/importQuestions")
     public ResponseEntity<String> handleQuestionUpload(@RequestParam(value = "file", required = true) MultipartFile file,
                                                    @RequestParam(value = "config", required = true) MultipartFile config,
-                                                   @RequestParam(value = "target", required = true) String target,
                                                    @RequestParam(required=false, defaultValue = "en") String lang,
                                                    @RequestParam(required=false, defaultValue = "10") Integer maxBindingCount,
                                                    @RequestParam(required=false, defaultValue = "nouns") String targetType) {
-        if (!uploadsAllowed()) {
+        //temporary questions.
+        /*if (!uploadsAllowed()) {
             System.err.println("Upload received but QUEGG_ALLOW_UPLOADS environment variable is not set to 'true'");
 
             return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
-        }
+        }*/
 
         String responseStatus = "";
+        
+        String fileName="/home/elahi/AHack/general/interface/QueGG-web/example/dbpedia.json";
 
         if (config != null) {
-            File tmpConfig  = new File("/tmp/config_import.json");
-
+            File tmpConfig = new File(fileName);
             try (OutputStream os = new FileOutputStream(tmpConfig)) {
                 os.write(config.getBytes());
                 responseStatus = "written " + config.getSize() + " bytes (config)\n";
+                endpoint.loadFromFile(tmpConfig);
+                endpoint.saveToFile();
+                System.out.println("endpoint is configured successfully!!!");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            endpoint.loadFromFile(target, tmpConfig);
-            endpoint.saveToFile();
         }
 
         lang = lang.toUpperCase();
@@ -78,10 +81,15 @@ public class UploadController {
             return new ResponseEntity<>("parameter 'targetType' can only be 'nouns', 'verbs', or 'adjectives'", HttpStatus.BAD_REQUEST);
         }
 
-        System.err.println("Starting question import, file length: " + file.getSize() +
+        System.err.println("Starting import conversion, file length: " + file.getSize() +
                 " bytes, language: " + lang);
 
-        File questionImportDirectory = new File("/tmp/questionimport");
+        
+        //File questionImportDirectory = new File("/tmp/questionimport");
+        File questionImportDirectory = new File(" /home/elahi/AHack/general/interface/QueGG-web/questionimport/");
+        
+       
+        
         if (questionImportDirectory.exists()) {
             System.err.println("deleting previous output directory " + questionImportDirectory);
             try {
@@ -100,18 +108,19 @@ public class UploadController {
         try (OutputStream os = new FileOutputStream(tmpFile)) {
             os.write(file.getBytes());
             responseStatus = "written " + file.getSize() + " bytes\n";
+            System.out.println("import questions to store is successfull!!!");
+            responseStatus += "upload ok\n";
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        responseStatus += "upload ok\n";
 
         try {
             System.err.println("[info] starting import of uploaded questions");
             int added = questions.loadExternalCSVs(questionImportDirectory.getAbsolutePath().toString(),
-                    "glob:" + questionImportDirectory.getAbsolutePath().toString() + "/" + "question*.csv");
+                    "glob:questions.csv");
             responseStatus += "# TRIE:\n";
             responseStatus += Integer.toString(added) + " added trie entries\n";
             responseStatus += "new size:" + questions.getTrie().size() + "\n";
@@ -126,9 +135,8 @@ public class UploadController {
     }
 
     @PostMapping("/import")
-    public ResponseEntity<String> handleFileUpload(@RequestParam(value="file", required=true) MultipartFile file,
-                                                   @RequestParam(value="config", required=true) MultipartFile config,
-                                                   @RequestParam(value="target", required=true) String target,
+    public ResponseEntity<String> handleFileUpload(@RequestParam(value = "file", required = true) MultipartFile file,
+                                                   @RequestParam(value = "config", required = true) MultipartFile config,
                                                    @RequestParam(required=false, defaultValue = "en") String lang,
                                                    @RequestParam(required=false, defaultValue = "10") Integer maxBindingCount,
                                                    @RequestParam(required=false, defaultValue = "nouns") String targetType,
@@ -153,7 +161,7 @@ public class UploadController {
                 e.printStackTrace();
             }
 
-            endpoint.loadFromFile(target, tmpConfig);
+            endpoint.loadFromFile(tmpConfig);
             endpoint.saveToFile();
         }
 
@@ -226,7 +234,7 @@ public class UploadController {
             responseStatus += this.readStream(pr.getErrorStream()) + "\n";
 
             System.err.println("[info] starting import of generator results");
-            int added = questions.loadExternalCSVs(target,"/tmp/generatorout",
+            int added = questions.loadExternalCSVs("/tmp/generatorout",
                     "glob:/tmp/generatorout/questions*.csv");
             responseStatus += "# TRIE:\n";
             responseStatus += Integer.toString(added) + " added trie entries\n";

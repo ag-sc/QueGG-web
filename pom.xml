@@ -11,12 +11,17 @@
 	<groupId>edu.citec.sc</groupId>
 	<artifactId>quegg-web</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>quegg-web</name>
+	<name>quegg-web-en</name>
 	<description>QueGG QA web interface</description>
 	<properties>
 		<java.version>11</java.version>
 		<start-class>edu.citec.sc.queggweb.QueggWebApplication</start-class>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<lucene.version>6.6.0</lucene.version>
 	</properties>
+        
+    
+        
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -71,12 +76,12 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-            <version>[2.12.6.1,)</version>
+			<version>2.11.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
-            <version>[2.12.6.1,)</version>
+			<version>2.11.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jena</groupId>
@@ -88,17 +93,31 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>30.1-jre</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-              <version>[2.17.1,)</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-              <version>[2.17.1,)</version>
-        </dependency>
+		</dependency>
+               
+                <!-- new dependency added from lucene -->
+                <dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>${lucene.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>${lucene.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>${lucene.version}</version>
+		</dependency>
+		<!-- To include highlight support -->
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-highlighter</artifactId>
+			<version>${lucene.version}</version>
+		</dependency>
+               
 	</dependencies>
 
 	<build>

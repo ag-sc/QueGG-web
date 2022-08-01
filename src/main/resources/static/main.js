@@ -315,11 +315,13 @@ function setupAutoComplete(input) {
         populateResultList(res_data.results);
 
         if (res_data.results && res_data.results.length === 1) {
+            // temporary closed
             fetchAnswer(res_data.results[0], true);
         }
         if (res_data.results && res_data.results.length > 0) {
             if (res_data.results[0].answerable) {
-                fetchAnswer(res_data.results[0], false);
+               // temporary closed 
+               fetchAnswer(res_data.results[0], false);
             }
         }
 

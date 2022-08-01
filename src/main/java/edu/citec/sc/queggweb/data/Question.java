@@ -11,4 +11,6 @@ public class Question {
     private String question;
     private String sparql;
     private String answer;
+    private String answerLabel;
+    private String answerType;
 }
