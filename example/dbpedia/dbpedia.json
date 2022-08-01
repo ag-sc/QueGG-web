@@ -1,0 +1,15 @@
+{
+  "endpoint" : "https://dbpedia.org/sparql",
+  "language" : "en",
+  "resourcePrefix" : "<http://dbpedia.org/resource/",
+  "resourceSuffix" : ">",
+  "resourceQuery" : "SELECT ?etype ?elabel ?elink ?eabstract ?ethumbnail WHERE {\n    OPTIONAL{ %RES% rdf:type ?etype .}\n    OPTIONAL{ %RES% rdfs:label ?elabel .            FILTER (lang(?elabel) = 'en') }\n    OPTIONAL{ %RES% <http://xmlns.com/foaf/0.1/isPrimaryTopicOf> ?elink . }\n    OPTIONAL{ %RES% <http://dbpedia.org/ontology/abstract> ?eabstract . \n            FILTER (lang(?eabstract) = 'en')\n    }\n    OPTIONAL{ %RES% <http://dbpedia.org/ontology/thumbnail> ?ethumbnail . }\n    \n} LIMIT 1\n",
+  "prefix" : {
+    "owl:" : "http://www.w3.org/2002/07/owl/",
+    "rdf:" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "dbo:" : "http://dbpedia.org/ontology/",
+    "dbr:" : "http://dbpedia.org/resource/",
+    "xsd:" : "http://www.w3.org/2001/XMLSchema/",
+    "rdfs:" : "http://www.w3.org/2000/01/rdf-schema#"
+  }
+}
