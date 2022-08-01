@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import static java.lang.System.exit;
 import java.net.URLDecoder;
 import java.nio.file.*;
 import java.util.ArrayList;
@@ -244,14 +245,29 @@ public class QuestionLoader {
         return results;
     }*/
     
-     public List<AutocompleteSuggestion> suggestionsToResults(List<Question> suggestions) {
-        val results = new ArrayList<AutocompleteSuggestion>();
-        for (Question question: suggestions) {
-            AutocompleteSuggestion autocompleteSuggestion = new AutocompleteSuggestion(question);
-            autocompleteSuggestion.setLeaf(true);
-            results.add(autocompleteSuggestion);
+     public List<AutocompleteSuggestion> suggestionsToResults(List<Question> suggestions, String query) {
+        List<AutocompleteSuggestion> results = new ArrayList<AutocompleteSuggestion>();
+        List<AutocompleteSuggestion> update = new ArrayList<AutocompleteSuggestion>();
+      
+        AutocompleteSuggestion firstAutocompleteSuggestion = null;
+        for (Question question : suggestions) {
+            if (query.equals(question.getQuestion())) {
+                firstAutocompleteSuggestion = new AutocompleteSuggestion(question);
+                firstAutocompleteSuggestion.setLeaf(true);      
+                results.add(firstAutocompleteSuggestion);
+            } else {
+                AutocompleteSuggestion autocompleteSuggestion = new AutocompleteSuggestion(question);
+                 results.add(autocompleteSuggestion);
+            }
         }
-        return results;
+        if(firstAutocompleteSuggestion!=null)
+           update.add(firstAutocompleteSuggestion);
+        for (AutocompleteSuggestion autocompleteSuggestion : results) {
+                update.add(autocompleteSuggestion);
+        }
+        
+        
+        return update;
     }
 
     private String getSparqlResourceLabel(String sparql) {

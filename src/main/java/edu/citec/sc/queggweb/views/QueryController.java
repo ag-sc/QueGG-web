@@ -69,21 +69,23 @@ public class QueryController implements Constants{
         result.put("query", query);
         result.put("question_count", questions.size());
         
-        List<AutocompleteSuggestion> results =new ArrayList<AutocompleteSuggestion>();
+        List<AutocompleteSuggestion> autocompleteSuggestions =new ArrayList<AutocompleteSuggestion>();
+        List<Question> suggestions = new ArrayList<Question>();
      
         try {
             System.out.println("search query is::" + query);
-            val suggestions = questions.autocomplete(INDEX_DIR,query, 20);
-            results = questions.suggestionsToResults(suggestions);
-            result.put("results", results);
+            suggestions = questions.autocomplete(INDEX_DIR,query, 20);
+            autocompleteSuggestions = questions.suggestionsToResults(suggestions,query);
+            result.put("results", autocompleteSuggestions);
             result.put("answer", null);
 
             if (suggestions.size() > 0) {
                 answer = "true";
-            }
-            //System.out.println("query is::" + query);
-        
-            for (AutocompleteSuggestion autocompleteSuggestion : results) {
+            }  
+            
+            System.out.println("suggestions::"+suggestions);            
+             
+            for (AutocompleteSuggestion autocompleteSuggestion : autocompleteSuggestions) {
                  String question=autocompleteSuggestion.getText().toLowerCase().stripLeading().stripLeading().trim();
                  query=query.toLowerCase().stripLeading().stripLeading().trim();
                  String sparql=autocompleteSuggestion.getSparql();
@@ -91,10 +93,20 @@ public class QueryController implements Constants{
                  String answerLabel=autocompleteSuggestion.getAnswerLabel();
                  String answerType=autocompleteSuggestion.getAnswerLabel();
                  
-                    /*System.out.println("query is::" + query);
+                 if(autocompleteSuggestion.isLeaf()){
+                       System.out.println("query is::" + query);
                     System.out.println("question is::" + question);
-                    System.out.println("answerUri is::" + answerUri);  */              
-                if (query.equals(question)) {
+                    System.out.println("answerUri is::" + answerUri);
+                    //executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql);
+                    if(online)
+                       executeSparqlOnline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql,answerUri);
+                    else     
+                       executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql,answerUri,answerLabel,answerType,menus);
+                    query="";
+     
+                 }
+                 
+                /*if (query.equals(question)) {
                     System.out.println("query is::" + query);
                     System.out.println("question is::" + question);
                     System.out.println("answerUri is::" + answerUri);
@@ -104,13 +116,7 @@ public class QueryController implements Constants{
                     else     
                        executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql,answerUri,answerLabel,answerType,menus);
                     query="";
-                }
-                    
-
-                //System.out.println("text::" + autocompleteSuggestion.getText());
-                //System.out.println("autocompleteSuggestion.getSparql()::" + autocompleteSuggestion.getSparql());
-                //System.out.println("autocompleteSuggestion.getSize()::" + autocompleteSuggestion.getSize());
-                System.out.println();
+                }*/
             }
             System.out.println("!!!!!!!!!!!!!!!!!!End!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             
