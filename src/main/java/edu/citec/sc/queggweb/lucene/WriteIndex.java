@@ -47,6 +47,8 @@ public class WriteIndex implements Constants{
 
         long sum = 0;
         Integer index = 0;
+        if(listOfFiles.length==0)
+               throw new Exception("no questions available to generate index!!");
 
         for (File file : listOfFiles) {
             if (file.isFile()) {
@@ -80,7 +82,8 @@ public class WriteIndex implements Constants{
                             continue;
                         flag = true;
                     } catch (Exception ex) {
-                       throw new Exception(" something is wrong "+question+ " "+ sparql+" "+answerUri+" length:"+row.length+" "+ex.getMessage());
+                       //throw new Exception(" something is wrong "+question+ " "+ sparql+" "+answerUri+" length:"+row.length+" "+ex.getMessage());
+                       continue;
                     }
                     if (flag) {
                         //System.out.println(index + " " + question + " ");

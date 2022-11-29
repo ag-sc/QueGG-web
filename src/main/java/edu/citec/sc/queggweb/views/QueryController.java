@@ -64,6 +64,9 @@ public class QueryController implements Constants{
         Boolean online=true;
         String INDEX_DIR = resourceDir+language+Constants.indexDir;
         
+        System.out.println("INDEX_DIR::"+INDEX_DIR);
+        //exit(1);
+        
         List<String> menus = Stream.of(FIND_WIKI_LINK, FIND_ABSTRACT, FIND_IMAGE_LINK).collect(Collectors.toCollection(ArrayList::new));
 
         result.put("query", query);
@@ -268,8 +271,8 @@ public class QueryController implements Constants{
     
     private void executeSparqlOffline(Map<String, Object> result, String sparql, String answerUri, String answerLabel, String answerType, List<String> menus) {
         String abstractfile = "../resources/en/turtle/short_abstracts_sorted_en.ttl";
-        String wikiLinkFile = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
-        String imagefileName = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
+        //String wikiLinkFile = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
+        //String imagefileName = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
 
         List<Map<String, String>> rsmap = new ArrayList<Map<String, String>>();
         Map<String, String> sparqlEndpointOutput = new TreeMap<String, String>();
@@ -277,8 +280,13 @@ public class QueryController implements Constants{
         //String wikiLink = this.getWikiLink(answerUri);
         //String abstractText = this.getAbstract(answerUri);
 
-        BashScript bashScript = new BashScript(menus, wikiLinkFile, abstractfile, imagefileName, answerUri);
+        //old Wikipedia link finding
+        //BashScript bashScript = new BashScript(menus, wikiLinkFile, abstractfile, imagefileName, answerUri);
+        //Wikipedia link finding
+        BashScript bashScript = new BashScript(menus, abstractfile, answerUri);
 
+        
+        
         //if (answerType.contains("single")) {
         //sparqlEndpointOutput.put("ethumbnail", "http://commons.wikimedia.org/wiki/Special:FilePath/Watermolen_van_de_polder_De_Dellen,_overzicht_-_Waar,_'t_-_20248138_-_RCE.jpg?width=300");
         sparqlEndpointOutput.put("result_type", "resource_meta");

@@ -53,6 +53,30 @@ public class BashScript {
         }
 
     }
+    
+     public BashScript(List<String> menus, String abstractfile, String uri) {
+        try {
+            uri="<"+uri+">";
+            if (menus.contains(FIND_WIKI_LINK)) {
+                this.wikiLink= this.findLink(uri);
+                System.out.println(FIND_WIKI_LINK + " " + this.wikiLink);
+            }
+            if (menus.contains(FIND_ABSTRACT)) {
+                this.abstractText = this.findAbstract(abstractfile, uri);
+                System.out.println(FIND_ABSTRACT + " " + this.abstractText);
+            }
+            if (menus.contains(FIND_IMAGE_LINK)) {
+                this.imageLink = this.findLink(uri);
+                System.out.println(FIND_IMAGE_LINK + " " +  this.imageLink);
+            }
+
+        } catch (IOException ex) {
+            Logger.getLogger(BashScript.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(BashScript.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
 
     private String findLink(String wikiFile, String answerUri) throws IOException, InterruptedException {
 
@@ -74,6 +98,12 @@ public class BashScript {
             }
         }
         return null;
+    }
+    
+    private String findLink(String answerUri) throws IOException, InterruptedException {
+        String prefixRes = "http://dbpedia.org/resource/";
+        String prefixWiki = "http://en.wikipedia.org/wiki/";
+        return answerUri.replace(prefixRes, prefixWiki);
     }
 
     public String findAbstract(String fileName, String answerUri) throws IOException, InterruptedException {
@@ -143,9 +173,14 @@ public class BashScript {
         String abstractfile = "../resources/en/turtle/short_abstracts_sorted_en.ttl";
         String wikiLinkFile = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
         String imagefileName = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
-        String uri = "<http://dbpedia.org/resource/Nishapur>";
+        String uri = "http://dbpedia.org/resource/Nishapur";
 
-        BashScript bashScript = new BashScript(menus, wikiLinkFile, abstractfile, imagefileName, uri);
+        //old BashScript ..................
+        //BashScript bashScript = new BashScript(menus, wikiLinkFile, abstractfile, imagefileName, uri);
+        
+        //BashScript ..................
+        BashScript bashScript = new BashScript(menus, abstractfile, uri);
+        System.out.println(bashScript.getWikiLink());
 
         /*try {
 
@@ -168,5 +203,7 @@ public class BashScript {
             Logger.getLogger(BashScript.class.getName()).log(Level.SEVERE, null, ex);
         }*/
     }
+    
+    
 
 }
