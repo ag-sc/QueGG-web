@@ -44,7 +44,7 @@ public class LuceneIndex implements Constants {
 
         for (String language : languages) {
             String indexDir = resourceDir + language + Constants.indexDir;
-            String questionDir = resourceDir + language + Constants.questionDir;
+            String questionDir = resourcesBig+ language+ Constants.questionDir ;
             String reportFile = resourceDir + language + "/" + "total.csv";
             File directory = new File(indexDir);
 
