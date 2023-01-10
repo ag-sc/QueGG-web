@@ -74,7 +74,8 @@ public class MainTripletoQuestions_EN implements ConstantsQuestion {
                 }
             }
             if (menus.contains(BUILD_TRIPLE_WITH_LABELS_PROPERTY)) {
-                
+                //input property diretory where we have property files dbo:developer and label_en.ttl
+                //output is subjet and objet uris with labels
                Set<String> exitProp=getExistingProperties(propertyDir);
                    
                 String labelFile = labels + underscore + language + ttl;
@@ -83,8 +84,8 @@ public class MainTripletoQuestions_EN implements ConstantsQuestion {
                     PropertyManagement propertyManagement = new PropertyManagement(language);
                     propertyManagement.generateProperty(propertyDir,
                             turtleDir + labelFile, numberOfTriples,exitProp);
-                    /*propertyManagement.generatePropertyFromList(propertyDir,propertyFile,
-                            turtleDir + labelFile, numberOfTriples,exitProp);*/
+                    //propertyManagement.generatePropertyFromList(propertyDir,propertyFile,
+                    //        turtleDir + labelFile, numberOfTriples,exitProp);
                     System.out.println("property management is completed!!!");
                 } catch (Exception ex) {
                     Logger.getLogger(MainTripletoQuestions.class.getName()).log(Level.SEVERE, null, ex);

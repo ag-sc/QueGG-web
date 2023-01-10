@@ -37,7 +37,7 @@ public class MainLuceneIndex implements Constants {
     public static void main(String[] args) throws Exception {
         List<String> menus = Stream.of(WRITE_INDEX).collect(Collectors.toCollection(ArrayList::new));
         //List<String> languages = Stream.of("es","en","de","it").collect(Collectors.toCollection(ArrayList::new));
-        List<String> languages = Stream.of("de").collect(Collectors.toCollection(ArrayList::new));
+        List<String> languages = Stream.of("en").collect(Collectors.toCollection(ArrayList::new));
 
         Set<String> frames = Stream.of("-NPP-", "-VP-", "-IPP-").collect(Collectors.toCollection(TreeSet::new));
 
@@ -53,6 +53,7 @@ public class MainLuceneIndex implements Constants {
             
             
             if (menus.contains(WRITE_INDEX)) {
+                System.out.print("questionDir::"+questionDir);
                 WriteIndex.writeIndex(questionDir, indexDir, testFlag, rowLimit);
             }
             if (menus.contains(READ_INDEX)) {

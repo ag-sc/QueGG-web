@@ -36,7 +36,8 @@ public class PropertyManagement implements ConstantsQuestion{
        
         Set<String> properties = FileUtils.getFiles(propertyInputDir);
         
-        System.out.println(properties);
+        System.out.println(propertyInputDir+" "+" "+labelFileName);
+        
         if (properties.isEmpty()) {
             throw new Exception("No property file to process!!");
         }

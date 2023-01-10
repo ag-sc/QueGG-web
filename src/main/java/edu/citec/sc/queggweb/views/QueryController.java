@@ -395,8 +395,6 @@ public class QueryController implements Constants{
     }
 
      private void executeSparqlOnline(Map<String, Object> result, String sparql,String answerUri) {
-         //test sparql select  ?s   {   ?s <http://dbpedia.org/ontology/birthPlace>  <http://dbpedia.org/resource/Agogo,_Ghana>.   }
-        //sparql= "select  ?s   {   ?s <http://dbpedia.org/ontology/birthPlace>  <http://dbpedia.org/resource/Agogo,_Ghana>.   }";
         val cached = answerCache.getIfPresent(sparql);
         if (cached != null) {
             for (String k: cached.keySet()) {
@@ -431,11 +429,11 @@ public class QueryController implements Constants{
 
             String sparqlResource = extractResource(sparql);
             //String sparqlResource =answerUri;
-            System.out.println("sparqlResource::"+sparqlResource);
+            //System.out.println("sparqlResource::"+sparqlResource);
 
             if (sparqlResource != null) {
                 Map<String, String> resourceMeta = resourceSparql(sparqlResource);
-                System.out.println("resourceMeta::"+resourceMeta);
+                //System.out.println("resourceMeta::"+resourceMeta);
                 if (resourceMeta != null && resourceMeta.size() > 0) {
                     rsmap.add(resourceMeta);
                 }
@@ -469,13 +467,24 @@ public class QueryController implements Constants{
         }
 
         result.put("sparql-result", rsmap);
+        /*if(rsmap.isEmpty()){
+             System.out.println("rsmap::"+rsmap);
+             System.out.println("sparql::"+sparql);
+             System.out.println("answerUri::"+answerUri);
+            exit(1);
+        }*/
+        //System.out.println("rsmap::!!!!!!!!!!!!!!!!!!!!!!!"+rsmap);  
+         /*if(result.isEmpty()){
+              System.out.println("result::!!!!!!!!!!!!!!!!!!!!!!!"+result);  
+              exit(1);
+         }*/
         for(String key:result.keySet()){
             Object obje=result.get(key);
            System.out.println("key::"+key);
            System.out.println("Object::"+obje);
 
-
         }
+       
         answerCache.put(sparql, result);
     }
 

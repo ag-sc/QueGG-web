@@ -23,4 +23,8 @@ FROM adoptopenjdk/openjdk15:jre-15.0.2_7-debian
 COPY --from=buildweb /source/target/*.jar /app/webapp.jar
 COPY --from=buildconv /source/target/QuestionGrammarGenerator.jar /app/generator.jar
 
+WORKDIR /app
+COPY ./ /app
+RUN chmod +x /app
+
 CMD ["java", "-jar", "/app/webapp.jar"]

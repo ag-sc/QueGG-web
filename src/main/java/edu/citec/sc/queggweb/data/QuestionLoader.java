@@ -32,7 +32,7 @@ import org.apache.commons.io.IOUtils;
 @Scope("singleton")
 public class QuestionLoader {
     private static final String CACHE_FILENAME = loadCacheFilename();
-    private static final String InputDir =  "../resources/";
+    //private static final String InputDir =  "/tmp/resources/";
 
     @Autowired
     public EndpointConfiguration endpoint;
@@ -44,9 +44,16 @@ public class QuestionLoader {
         }
 
         // default value
-        //return "/tmp/trie.cache";
-       return InputDir+"trie.cache";
+        return "/tmp/trie.cache";
+       //return InputDir+"trie.cache";
     }
+    
+     private static String inputDir() {
+        // default value
+        //return "/tmp/trie.cache";
+       return "/tmp/resources/";
+    }
+
 
     private final int MAX_CHILD_SAMPLES = 200;
     private int loaded = 0;
@@ -90,14 +97,17 @@ public class QuestionLoader {
 
         int coreCount = Runtime.getRuntime().availableProcessors();
         int threadCount = coreCount > 2 ? coreCount - 2 : 2;
+        
+        String InputDir=inputDir();
+         System.out.println(InputDir);
 
         File files = new File(InputDir);
+        
 
         for (String fileName : files.list()) {
             if(!fileName.contains(".csv"))
                 continue;
             
-            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!fileName::"+InputDir+fileName);
             
              File file=new File(fileName);
             CSVReaderHeaderAware reader = null;
@@ -158,21 +168,21 @@ public class QuestionLoader {
         }
     }
 
-    private void loadFromCSV() throws IOException {
+    /*private void loadFromCSV() throws IOException {
         try (InputStream is = Thread.currentThread().getContextClassLoader()
                 .getResourceAsStream("data/questions.csv")) {
             loadFromInputStream("resource-stream", is);
             trie.dump(true);
         }
-    }
+    }*/
 
     public QuestionLoader() throws IOException {
-        loadFromCache();
+        /*loadFromCache();
         if (trie.size() == 0) {
             loadFromCSV();
         }
 
-        loadExternalCSVs();
+        loadExternalCSVs();*/
     }
 
     private int loadExternalCSVs() throws IOException {

@@ -47,8 +47,10 @@ public class WriteIndex implements Constants{
 
         long sum = 0;
         Integer index = 0;
+        
+        
         if(listOfFiles.length==0)
-               throw new Exception("no questions available to generate index!!");
+               throw new Exception("no questions available to generate index!!"+CSV_DIR);
 
         for (File file : listOfFiles) {
             if (file.isFile()) {
