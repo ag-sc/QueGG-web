@@ -1,3 +1,5 @@
+package edu.citec.sc.script.processing;
+
 
 import edu.citec.sc.queggweb.turtle.ConstantsQuestion;
 import edu.citec.sc.queggweb.turtle.EntityManagement;
@@ -27,7 +29,7 @@ import org.apache.commons.io.FilenameUtils;
  *
  * @author elahi
  */
-public class MainTripletoQuestions_EN implements ConstantsQuestion {
+public class TripletoQuestions_EN implements ConstantsQuestion {
 
     public static void main(String[] args) {
         //List<String> languages = Stream.of(italian,german,spanish,english).collect(Collectors.toCollection(ArrayList::new));
@@ -88,7 +90,7 @@ public class MainTripletoQuestions_EN implements ConstantsQuestion {
                     //        turtleDir + labelFile, numberOfTriples,exitProp);
                     System.out.println("property management is completed!!!");
                 } catch (Exception ex) {
-                    Logger.getLogger(MainTripletoQuestions.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(TripletoQuestions.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -99,7 +101,7 @@ public class MainTripletoQuestions_EN implements ConstantsQuestion {
         try {
             FileUtils.stringToFile(content, propertyDir);
         } catch (IOException ex) {
-            Logger.getLogger(MainTripletoQuestions.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TripletoQuestions.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

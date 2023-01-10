@@ -6,7 +6,7 @@ import com.opencsv.CSVReaderHeaderAware;
 import static edu.citec.sc.queggweb.constants.Constants.ANSWER_FIELD;
 import static edu.citec.sc.queggweb.constants.Constants.QUESTION_FIELD;
 import static edu.citec.sc.queggweb.constants.Constants.SPARQL_FIELD;
-import edu.citec.sc.queggweb.lucene.ReadIndex;
+import edu.citec.sc.script.indexing.ReadIndex;
 import edu.citec.sc.queggweb.views.AutocompleteSuggestion;
 import lombok.Getter;
 import lombok.Synchronized;

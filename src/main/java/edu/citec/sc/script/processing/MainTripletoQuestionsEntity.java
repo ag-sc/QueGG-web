@@ -1,3 +1,5 @@
+package edu.citec.sc.script.processing;
+
 
 import edu.citec.sc.queggweb.turtle.ConstantsQuestion;
 import edu.citec.sc.queggweb.turtle.EntityManagement;
@@ -27,16 +29,14 @@ import org.apache.commons.io.FilenameUtils;
  *
  * @author elahi
  */
-public class MainTripletoQuestions implements ConstantsQuestion {
+public class MainTripletoQuestionsEntity implements ConstantsQuestion {
 
     public static void main(String[] args) {
         //List<String> languages = Stream.of(italian,german,spanish,english).collect(Collectors.toCollection(ArrayList::new));
         //List<String> menus = Stream.of(FIND_ENTITIES).collect(Collectors.toCollection(ArrayList::new));
-        List<String> languages = Stream.of(english).collect(Collectors.toCollection(ArrayList::new));
-        List<String> menus = Stream.of(BUILD_TRIPLE_WITH_LABELS_PROPERTY).collect(Collectors.toCollection(ArrayList::new));
-        //List<String> propertyFiles = Stream.of(mappingbased_objects, specific_mappingbased_properties, mappingbased_literals, persondata, mappingbased_objects_disjoint_domain, mappingbased_objects_disjoint_range, infobox_properties).collect(Collectors.toCollection(ArrayList::new));
+        List<String> languages = Stream.of(spanish).collect(Collectors.toCollection(ArrayList::new));
+        List<String> menus = Stream.of(BUILD_TRIPLE_WITH_LABELS_ENTITY).collect(Collectors.toCollection(ArrayList::new));
         List<String> propertyFiles = Stream.of(mappingbased_objects, specific_mappingbased_properties, mappingbased_literals, persondata, mappingbased_objects_disjoint_domain, mappingbased_objects_disjoint_range, infobox_properties).collect(Collectors.toCollection(ArrayList::new));
-
         Integer numberOfTriples = -1;
 
         for (String language : languages) {
@@ -75,13 +75,30 @@ public class MainTripletoQuestions implements ConstantsQuestion {
 
                 }
             }
+            if (menus.contains(BUILD_TRIPLE_WITH_LABELS_ENTITY)) {
+                
+               Set<String> exitProp=getExistingProperties(entittyDir);
+                   
+                String labelFile = labels + underscore + language + ttl;
+                try {            
+                  
+                    PropertyManagement propertyManagement = new PropertyManagement(language);
+                    propertyManagement.generateProperty(entittyDir,
+                            turtleDir + labelFile, numberOfTriples,exitProp);
+                    /*propertyManagement.generatePropertyFromList(propertyDir,propertyFile,
+                            turtleDir + labelFile, numberOfTriples,exitProp);*/
+                    System.out.println("property management is completed!!!");
+                } catch (Exception ex) {
+                    Logger.getLogger(MainTripletoQuestionsEntity.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             if (menus.contains(BUILD_TRIPLE_WITH_LABELS_PROPERTY)) {
                 
                Set<String> exitProp=getExistingProperties(propertyDir);
                    
                 String labelFile = labels + underscore + language + ttl;
-                try {
-                    String propertyFile = propertyDir + PROPERTY_MARCH + ".txt";
+                try {            
+                  
                     PropertyManagement propertyManagement = new PropertyManagement(language);
                     propertyManagement.generateProperty(propertyDir,
                             turtleDir + labelFile, numberOfTriples,exitProp);
@@ -89,7 +106,7 @@ public class MainTripletoQuestions implements ConstantsQuestion {
                             turtleDir + labelFile, numberOfTriples,exitProp);*/
                     System.out.println("property management is completed!!!");
                 } catch (Exception ex) {
-                    Logger.getLogger(MainTripletoQuestions.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(MainTripletoQuestionsEntity.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -100,7 +117,7 @@ public class MainTripletoQuestions implements ConstantsQuestion {
         try {
             FileUtils.stringToFile(content, propertyDir);
         } catch (IOException ex) {
-            Logger.getLogger(MainTripletoQuestions.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MainTripletoQuestionsEntity.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

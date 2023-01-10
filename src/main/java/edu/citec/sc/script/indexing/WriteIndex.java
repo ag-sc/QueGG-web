@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.citec.sc.queggweb.lucene;
+package edu.citec.sc.script.indexing;
 
 import edu.citec.sc.queggweb.constants.Constants;
 import static edu.citec.sc.queggweb.constants.Constants.Limit;

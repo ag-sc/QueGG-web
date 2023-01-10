@@ -1,4 +1,4 @@
-package edu.citec.sc.queggweb.lucene;
+package edu.citec.sc.script.indexing;
 
 import edu.citec.sc.queggweb.constants.Constants;
 import edu.citec.sc.queggweb.data.Question;

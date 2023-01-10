@@ -1,3 +1,5 @@
+package edu.citec.sc.script.indexing;
+
 
 
 /*
@@ -9,7 +11,6 @@
 import edu.citec.sc.queggweb.constants.Constants;
 import edu.citec.sc.queggweb.data.Question;
 import edu.citec.sc.queggweb.data.QuestionLoader;
-import edu.citec.sc.queggweb.lucene.WriteIndex;
 import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.FIND_ENTITIES;
 import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.english;
 import static edu.citec.sc.queggweb.turtle.ConstantsQuestion.german;
@@ -29,15 +30,15 @@ import org.apache.commons.io.FileUtils;
  *
  * @author elahi
  */
-public class MainLucene implements Constants {
+public class LuceneIndex implements Constants {
 
     private static Boolean testFlag = false;
     private static Set<String> menu = new HashSet<String>();
 
     public static void main(String[] args) throws Exception {
-        List<String> menus = Stream.of(Constants.WRITE_INDEX).collect(Collectors.toCollection(ArrayList::new));
-        //List<String> languages = Stream.of("es","en","de","it").collect(Collectors.toCollection(ArrayList::new));
-        List<String> languages = Stream.of("en").collect(Collectors.toCollection(ArrayList::new));
+        List<String> menus = Stream.of(WRITE_INDEX).collect(Collectors.toCollection(ArrayList::new));
+        List<String> languages = Stream.of("es","en","de","it").collect(Collectors.toCollection(ArrayList::new));
+        //List<String> languages = Stream.of("de").collect(Collectors.toCollection(ArrayList::new));
 
         Set<String> frames = Stream.of("-NPP-", "-VP-", "-IPP-").collect(Collectors.toCollection(TreeSet::new));
 
@@ -46,37 +47,27 @@ public class MainLucene implements Constants {
             String questionDir = resourceDir + language + Constants.questionDir;
             String reportFile = resourceDir + language + "/" + "total.csv";
             File directory = new File(indexDir);
-            FileUtils.cleanDirectory(directory);
+
             if (menus.contains(NUMBER_OF_QUESTIONS)) {
                 Statistics.numberQuestions(frames, questionDir, reportFile, language);
             }
             
-             if (menus.contains(DUPLICATE_REMOVER)) {
-                 Integer index=0;
-                for (String frameType : frames) {
-                    index=index+1;
-                    Map<String, Set<String>> selectedFiles =getSelectedFiles(questionDir,frameType);
-                    Statistics.folderDuplicateRemover(selectedFiles, questionDir,frameType);
-
-                }
-            }
+            
             if (menus.contains(WRITE_INDEX)) {
+                System.out.print("questionDir::"+questionDir);
                 WriteIndex.writeIndex(questionDir, indexDir, testFlag, rowLimit);
             }
             if (menus.contains(READ_INDEX)) {
-                String tokens = "place was";
+                String tokens = "wo wurde";
                 System.out.println("search::" + tokens);
                 //LinkedHashSet<String> results = new LinkedHashSet<String>();
 
-                List<Question> results = new ArrayList<Question>();
                 QuestionLoader questionLoader = new QuestionLoader();
                 //Map<String,Question> results = ReadIndex.readIndex(QUESTION_FIELD, SPARQL_FIELD,ANSWER_FIELD,tokens, 10);
-                List<Question> suggestions = questionLoader.autocomplete(Constants.indexDir, tokens, 20);
+                List<Question> suggestions = questionLoader.autocomplete(indexDir, tokens, 50);
                 System.out.println("result!!!!!!!");
-                for (Question result : results) {
-                    System.out.println(result.getQuestion());
-                    System.out.println(result.getSparql());
-                    System.out.println(result.getAnswer());
+                for (Question result : suggestions) {
+                    System.out.println(result.getQuestion()+" "+result.getSparql()+" "+result.getAnswer());
                 }
             }
         }
