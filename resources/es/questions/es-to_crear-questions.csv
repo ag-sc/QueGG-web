@@ -1,0 +1,1 @@
+"""http://localhost:8080#to_crear_3_1717524""","""¿Cuántas veces ha estado cre� El Giro Semántico?""","""select (COUNT(DISTINCT ?objOfProp) as ?c) WHERE    {    <http://es.dbpedia.org/resource/El_Giro_Semántico> <http://dbpedia.org/ontology/author>  ?objOfProp .    }""","""http://es.dbpedia.org/resource/Estados_Unidos""","""Estados Unidos""","""VP"""

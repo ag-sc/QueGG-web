@@ -1,31 +1,33 @@
 # Run QA system on your machine
 This page provides instructions on how to run the QA system on your machine. The home page of the hackathon can be found [here](https://scdemo.techfak.uni-bielefeld.de/qahackathon/index.php/)
 
-### Install QA system
+### Install QA system from dockerHub
 Install [docker] (https://docs.docker.com/engine/install/)
 1. Download the image
 ```
-docker pull agsc/quegg-web:latest
+docker pull elahi/quegg-web:index
 ```
 2. Run the image as a container.
 ```
-docker run -p "8089:8089" -e "QUEGG_ALLOW_UPLOADS=true" agsc/quegg-web:latest
+docker run -p "8089:8089" -e "QUEGG_ALLOW_UPLOADS=true" elahi/quegg-web:index
 ```
-Go to http://localhost:8089/quegg/ and the interface will be shown on your browser. It will initially be empty, a minimal example to get data into the running instance would be:
+Go to http://localhost:8089/quegg/ and the interface will be shown on your browser. Test the browser by typing 
 
-### Add questions to the QA system
-3. Download the file containing lexical entries.  The file [nounppframe.csv](https://raw.githubusercontent.com/ag-sc/QueGG-web/main/example/nounppframe.csv) shows an example of the lexical entry.  
+### Or Install QA system from GitHub
+1. Download the project
 ```
-wget -O nounppframe.csv https://raw.githubusercontent.com/ag-sc/QueGG-web/main/example/nounppframe.csv
+git clone https://github.com/ag-sc/QueGG-web.git -b extension
 ```
-Post the file
+2. Go to the location QueGG-web and build the project
 ```
-curl -X "POST" -F "file=@nounppframe.csv" "http://localhost:8089/quegg/import"      
+mvn clean package
 ```
-### Add  more questions to the QA system
-a) add lexical entry at Google XSL [sheet](https://docs.google.com/spreadsheets/d/1NgH7GdFcAqQuYU3ziIXpq0Yybt4lZIR15DpPgaoXF4M/edit?usp=sharing). See the [guideline](https://scdemo.techfak.uni-bielefeld.de/qahackathon/tutorial/coverage.php#id4) of writing a lexical entry for a grammar type.      
-b) download the Google XSL sheet as csv.  File>Download>Comma-separated values [.csv, current sheet].\
-c) repeat step 3. The questions of newly added lexical entry will be visible in QA system.
+3. Run the project
+```
+java -jar target/quegg-web-0.0.1-SNAPSHOT.jar
+```
+
+Go to http://localhost:8089/quegg/ and the interface will be shown on your browser. Test the browser by typing 
 
 Please use the following citation:
 ```
