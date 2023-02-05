@@ -13,7 +13,7 @@ public interface Constants {
 
     //public static final String INDEX_DIR = "../resources/en/index/";
     public static final String resourceDir = "resources/";
-    public static final String resourcesBig ="resourcesBig/";
+    public static final String resourcesBig ="../resourcesBig/";
 
     //public static final String resourceDir = "resources/";
     public static final String indexDir = "/index/";

@@ -2,7 +2,7 @@
 quegg-web.iml
 target/
 resourcesBig/
-# resources/
+resources/
 
 # Compiled class file
 *.class

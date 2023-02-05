@@ -33,6 +33,8 @@ import org.apache.commons.io.IOUtils;
 public class QuestionLoader {
     private static final String CACHE_FILENAME = loadCacheFilename();
     //private static final String InputDir =  "/tmp/resources/";
+    public static List<AutocompleteSuggestion> kurrentSuggestions=new ArrayList<AutocompleteSuggestion>();
+     public static List<AutocompleteSuggestion> lastSuggestions=new ArrayList<AutocompleteSuggestion>();
 
     @Autowired
     public EndpointConfiguration endpoint;
@@ -255,13 +257,17 @@ public class QuestionLoader {
         return results;
     }*/
     
-     public List<AutocompleteSuggestion> suggestionsToResults(List<Question> suggestions, String query) {
+     /*public List<AutocompleteSuggestion> suggestionsToResults(List<Question> suggestions, String query) {
         List<AutocompleteSuggestion> results = new ArrayList<AutocompleteSuggestion>();
         List<AutocompleteSuggestion> update = new ArrayList<AutocompleteSuggestion>();
+       
+        
       
         AutocompleteSuggestion firstAutocompleteSuggestion = null;
         for (Question question : suggestions) {
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!query:::"+query+" question::"+question.getQuestion());
             if (query.equals(question.getQuestion())) {
+                System.out.println("math::"+"query:::"+query+" question::"+question);
                 firstAutocompleteSuggestion = new AutocompleteSuggestion(question);
                 firstAutocompleteSuggestion.setLeaf(true);      
                 results.add(firstAutocompleteSuggestion);
@@ -275,10 +281,82 @@ public class QuestionLoader {
         for (AutocompleteSuggestion autocompleteSuggestion : results) {
                 update.add(autocompleteSuggestion);
         }
-        
+       lastSuggestions=new ArrayList<AutocompleteSuggestion>();
+       lastSuggestions.addAll(kurrentSuggestions);
+       kurrentSuggestions=new ArrayList<AutocompleteSuggestion>();
+       kurrentSuggestions.addAll(results);
+       
         
         return update;
+    }*/
+    
+    public List<AutocompleteSuggestion> suggestionsToResults(List<Question> suggestions, String query) {
+        List<AutocompleteSuggestion> results = new ArrayList<AutocompleteSuggestion>();
+        List<AutocompleteSuggestion> update = new ArrayList<AutocompleteSuggestion>();
+
+        AutocompleteSuggestion firstAutocompleteSuggestion = null;
+        
+        for (Question question : suggestions) {
+
+            if (query.contains("?")&&query.equals(question.getQuestion())) {
+               System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!query:::" + query + " question::" + question.getQuestion());
+
+                //System.out.println("math::" + "query:::" + query + " question::" + question);
+                firstAutocompleteSuggestion = new AutocompleteSuggestion(question);
+                firstAutocompleteSuggestion.setLeaf(true);
+                //firstAutocompleteSuggestion.align(getSparqlResourceLabel(question.getSparql()));
+                results.add(firstAutocompleteSuggestion);
+            } else {
+                AutocompleteSuggestion autocompleteSuggestion = new AutocompleteSuggestion(question);
+                results.add(autocompleteSuggestion);
+                //autocompleteSuggestion.align(question.getSparql());
+            }
+        }
+        if (firstAutocompleteSuggestion != null) {
+            update.add(firstAutocompleteSuggestion);
+        }
+        for (AutocompleteSuggestion autocompleteSuggestion : results) {
+            update.add(autocompleteSuggestion);
+        }
+        lastSuggestions = new ArrayList<AutocompleteSuggestion>();
+        lastSuggestions.addAll(kurrentSuggestions);
+        kurrentSuggestions = new ArrayList<AutocompleteSuggestion>();
+        kurrentSuggestions.addAll(results);
+
+        return update;
     }
+     
+      public List<AutocompleteSuggestion> suggestionsToResults(List<TrieNode<Question>> suggestions) {
+        val sparqlResourceLabels = this.gatherSparqlResourceLabels(suggestions);
+        val results = new ArrayList<AutocompleteSuggestion>();
+        for (TrieNode<Question> node: suggestions) {
+            AutocompleteSuggestion suggestion = new AutocompleteSuggestion(node);
+            if (node.isLeaf()) {
+                suggestion.align(getSparqlResourceLabel(node.getData() != null ? node.getData().getSparql() : null));
+            } else {
+                suggestion.align(sparqlResourceLabels);
+            }
+            results.add(suggestion);
+        }
+        return results;
+    }
+     
+     public List<AutocompleteSuggestion> suggestionsToResults2(List<Question> suggestions, String query) {
+        /*List<AutocompleteSuggestion> update = new ArrayList<AutocompleteSuggestion>();
+
+        for (AutocompleteSuggestion autocompleteSuggestion : lastSuggestions) {
+            String question = autocompleteSuggestion.getText().toLowerCase().stripLeading().stripLeading().trim();
+            query = query.toLowerCase().stripLeading().stripLeading().trim();
+            if (query.equals(question)) {
+                autocompleteSuggestion.setLeaf(true);
+            }
+            update.add(autocompleteSuggestion);
+        }*/
+        return lastSuggestions;
+    }
+
+     
+       
 
     private String getSparqlResourceLabel(String sparql) {
         if (sparql == null)
@@ -319,10 +397,13 @@ public class QuestionLoader {
         return labels;
     }
     
-    public List<Question> autocomplete(String INDEX_DIR,String query, int topN) throws Exception {
-        System.out.println("read index:::"+query);
-        Map<String,Question> results= ReadIndex.readIndex(INDEX_DIR, query, topN);
+    public List<Question> autocomplete(String indexDir,String query, int topN,List<Question> lastQuestions) throws Exception {
+        Map<String,Question> results= ReadIndex.readIndex(indexDir, query);
          List<Question> suggestions=new ArrayList<Question>();
+         Integer index=0;
+         if(query.contains("?")){
+             return lastQuestions;
+         }
          
         for (String questionT : results.keySet()) {
             Question question =results.get(questionT);
@@ -330,10 +411,41 @@ public class QuestionLoader {
             //String sparqlT = "select  ?o    {    <http://dbpedia.org/resource/Lower_Canada> <http://dbpedia.org/ontology/capital>  ?o    }";
             //String answerT = "Quebec City";
             //Question question = new Question(questionT, sparqlT, answerT);
+            if(topN==-1){
+                
+            }
+            else if(index>=topN){
+                break;
+            }
             suggestions.add(question);   
+            index=index+1;
         }
         return suggestions;
     }
+    
+     public List<Question> autocomplete(String indexDir,String query, int topN) throws Exception {
+        Map<String,Question> results= ReadIndex.readIndex(indexDir, query);
+         List<Question> suggestions=new ArrayList<Question>();
+         Integer index=0;
+         
+        for (String questionT : results.keySet()) {
+            Question question =results.get(questionT);
+            //System.out.println("questionT::"+question.getQuestion()+" sparql::"+question.getSparql()+" answer:"+question.getAnswer());
+            //String sparqlT = "select  ?o    {    <http://dbpedia.org/resource/Lower_Canada> <http://dbpedia.org/ontology/capital>  ?o    }";
+            //String answerT = "Quebec City";
+            //Question question = new Question(questionT, sparqlT, answerT);
+            if(topN==-1){
+                
+            }
+            else if(index>=topN){
+                break;
+            }
+            suggestions.add(question);   
+            index=index+1;
+        }
+        return suggestions;
+    }
+
 
     /*public List<TrieNode<Question>> autocomplete(String query, int topN, int maxDepth) {
         final List<TrieNode<Question>> suggestions = new ArrayList<>();
@@ -438,4 +550,8 @@ public class QuestionLoader {
 
         suggestions.add(cur);
     }
+
+
+   
+    
 }

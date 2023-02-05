@@ -37,16 +37,21 @@ public class LuceneIndex implements Constants {
 
     public static void main(String[] args) throws Exception {
         List<String> menus = Stream.of(WRITE_INDEX).collect(Collectors.toCollection(ArrayList::new));
-        List<String> languages = Stream.of("es","en","de","it").collect(Collectors.toCollection(ArrayList::new));
-        //List<String> languages = Stream.of("de").collect(Collectors.toCollection(ArrayList::new));
+         List<String> languages = Stream.of("en").collect(Collectors.toCollection(ArrayList::new));
+        //List<String> languages = Stream.of("en").collect(Collectors.toCollection(ArrayList::new));
 
         Set<String> frames = Stream.of("-NPP-", "-VP-", "-IPP-").collect(Collectors.toCollection(TreeSet::new));
 
         for (String language : languages) {
             String indexDir = resourceDir + language + Constants.indexDir;
-            String questionDir = resourcesBig+ language+ Constants.questionDir ;
+            //String questionDir = resourceDir+ language+ Constants.questionDir ;
+            //String questionDir = resourcesBig+ language+ Constants.questionDir ;
+            String questionDir = "../resources/"+ language+ Constants.questionDir ;
             String reportFile = resourceDir + language + "/" + "total.csv";
             File directory = new File(indexDir);
+            
+            //System.out.println("resourceDir::"+questionDir);
+            //exit(1);
 
             if (menus.contains(NUMBER_OF_QUESTIONS)) {
                 Statistics.numberQuestions(frames, questionDir, reportFile, language);

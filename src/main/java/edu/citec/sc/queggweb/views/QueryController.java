@@ -38,6 +38,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 public class QueryController implements Constants{
+    
+    private List<Question> lastQuestions=new ArrayList<Question>();
 
     private Cache<String, Map<String, String>> resourceCache = CacheBuilder.newBuilder()
             .maximumSize(5000)
@@ -79,12 +81,15 @@ public class QueryController implements Constants{
      
         try {
             System.out.println("search query is::" + query);
-            suggestions = questions.autocomplete(INDEX_DIR,query, 20);
+            Integer thresold=10;
+            suggestions = questions.autocomplete(INDEX_DIR,query, thresold,lastQuestions);
+            this.lastQuestions=new ArrayList<Question>();
+            this.lastQuestions.addAll(suggestions);
             autocompleteSuggestions = questions.suggestionsToResults(suggestions,query);
             result.put("results", autocompleteSuggestions);
             result.put("answer", null);
      
-            //if (suggestions.size() > 0 && suggestions.get(0) != null) {
+            if (suggestions.size() > 0 && suggestions.get(0) != null) {
                 for (AutocompleteSuggestion autocompleteSuggestion : autocompleteSuggestions) {
                     String question = autocompleteSuggestion.getText().toLowerCase().stripLeading().stripLeading().trim();
                     query = query.toLowerCase().stripLeading().stripLeading().trim();
@@ -92,14 +97,32 @@ public class QueryController implements Constants{
                     String answerUri = autocompleteSuggestion.getAnswerUri();
                     String answerLabel = autocompleteSuggestion.getAnswerLabel();
                     String answerType = autocompleteSuggestion.getAnswerLabel();
+                    Boolean flag=autocompleteSuggestion.isLeaf();
+                     /*if(!flag&&(query.endsWith("?")||query.endsWith(".")))
+                        flag=true;*/
+                     //System.out.println(question+"   autocompleteSuggestion.isLeaf()" + autocompleteSuggestion.isLeaf()+" "+flag);
+                       //System.out.println("query is::" + query);
+                        //System.out.println("question is::" + question);
+                       
+                        //System.out.println("answerUri is::" + answerUri);
+                        
+                    /*String question=  autocompleteSuggestions.get(0).getText();
+                    String sparql = question.getSparql();
+                    String answerUri = question.getAnswer();
+                    String answerLabel = question.getAnswerLabel();
+                    String answerType = question.getAnswerLabel();
+                    System.out.println(query+"   :::" + question.getQuestion());*/
+                    System.out.println(query+" question:"+question+"   autocompleteSuggestion.isLeaf()" + autocompleteSuggestion.isLeaf()+" "+flag);
 
-                    if (autocompleteSuggestion.isLeaf()) {
+
+                    if (flag) {
                         System.out.println("query is::" + query);
                         System.out.println("question is::" + question);
                         System.out.println("answerUri is::" + answerUri);
+
                         //executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql);
                         if (online) {
-                            executeSparqlOnline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri);
+                            executeSparqlOnline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
                         } else {
                             executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
                         }
@@ -109,7 +132,7 @@ public class QueryController implements Constants{
 
                 }
 
-           // }
+            }
 
             
             System.out.println("!!!!!!!!!!!!!!!!!!End!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -396,7 +419,7 @@ public class QueryController implements Constants{
         return lastPart;
     }
 
-     private void executeSparqlOnline(Map<String, Object> result, String sparql,String answerUri) {
+     private void executeSparqlOnline(Map<String, Object> result, String sparql,String answerUri,String answerLabel, String answerType,List<String> menus) {
         val cached = answerCache.getIfPresent(sparql);
         if (cached != null) {
             for (String k: cached.keySet()) {
@@ -413,6 +436,8 @@ public class QueryController implements Constants{
             qpe.printStackTrace();
             result.put("sparql-result", null);
             result.put("sparql-error", qpe.toString());
+            executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
+
             return;
         }
         List<String> resolveResources = new ArrayList<>();
@@ -480,12 +505,12 @@ public class QueryController implements Constants{
               System.out.println("result::!!!!!!!!!!!!!!!!!!!!!!!"+result);  
               exit(1);
          }*/
-        for(String key:result.keySet()){
+        /*for(String key:result.keySet()){
             Object obje=result.get(key);
            System.out.println("key::"+key);
            System.out.println("Object::"+obje);
 
-        }
+        }*/
        
         answerCache.put(sparql, result);
     }

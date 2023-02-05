@@ -57,6 +57,7 @@ public class BashScript {
      public BashScript(List<String> menus, String abstractfile, String uri) {
         try {
             uri="<"+uri+">";
+            System.out.println("uri:::"+uri);
             if (menus.contains(FIND_WIKI_LINK)) {
                 this.wikiLink= this.findLink(uri);
                 System.out.println(FIND_WIKI_LINK + " " + this.wikiLink);
@@ -108,9 +109,11 @@ public class BashScript {
 
     public String findAbstract(String fileName, String answerUri) throws IOException, InterruptedException {
         String command = "grep -w" + " " + answerUri + " " + fileName;
+        //System.out.println("grep ommend:::"+fileName);
         String bashResult = this.runCommandLine(command);
         String string = bashResult.replace(COMMENT, "");
         string = string.replace(answerUri, "");
+        //System.out.println("string::"+string);
         return string.stripLeading();
 
     }

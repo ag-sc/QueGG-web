@@ -30,6 +30,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 import edu.citec.sc.uio.CsvFile;
+import static java.lang.System.exit;
 
 /**
  *
@@ -61,7 +62,6 @@ public class WriteIndex implements Constants{
                 //long lines = countLineOfFile(fileName);
                 //System.out.println(file.getName() + lines);
                 for (String[] row : rows) {
-                    System.out.println("length::"+row.length);
                     index = index + 1;
                     Boolean flag = false;
                     String id = null, question = null, sparql = null, answerUri = null,answerLabel=null,frameType=null,answerType=null;
@@ -79,6 +79,19 @@ public class WriteIndex implements Constants{
                         answerLabel = row[4].replace("\"", "");
                         frameType = row[5].replace("\"", "");
                         answerType = row[6].replace("\"", "");
+                        
+                        if (sparql.contains("$")) {
+                            sparql = sparql.replace("$", ",");
+                        }
+
+                        if (answerUri.contains("$")) {
+                            answerUri = answerUri.replace("$", ",");
+                        }
+
+                        if (answerLabel.contains("$")) {
+                            answerLabel = answerLabel.replace("$", ",");
+                        }
+
                          
                         if(question.contains(" null ")|question.contains(" null?"))
                             continue;
@@ -89,7 +102,10 @@ public class WriteIndex implements Constants{
                     }
                     if (flag) {
                         //System.out.println(index + " " + question + " ");
-                        System.out.println(index + " " + question + " " + sparql + " " + answerUri + " " + file.getName());
+                         System.out.println(index + " " + question + " " + sparql + " " + answerUri + " " + file.getName());
+                        
+                        //if(!answerUri.contains("http"))
+                        //   System.out.println(question + " " + sparql );
 
                         Document document = createDocument(id, question,sparql,answerUri,answerLabel,answerType);
                         //writer.addDocument(document);

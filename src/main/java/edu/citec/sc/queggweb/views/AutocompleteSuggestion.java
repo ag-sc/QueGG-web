@@ -45,7 +45,7 @@ public class AutocompleteSuggestion{
         this.setAnswerLabel(question.getAnswerLabel());
     }
 
-    /*public void align(List<String> resourceLabels) {
+      public void align(List<String> resourceLabels) {
         if (false) {
             int bestOnset = -1;
 
@@ -73,10 +73,9 @@ public class AutocompleteSuggestion{
             this.entityOnset = bestOnset + 1;
             this.entityOffset = this.text.length() - 1;
         }
-    }*/
+    }
 
-    /*public void align(String resourceLabel) {
-        System.out.println("resourceLabel::"+resourceLabel);
+    public void align(String resourceLabel) {
         if (resourceLabel == null)
             return;
 
@@ -90,5 +89,5 @@ public class AutocompleteSuggestion{
 
         //String tmp = text;
         //this.text = tmp.substring(0, entityOnset) + "|" + tmp.substring(entityOnset, entityOffset) + "|" + tmp.substring(entityOffset);
-    }*/
+    }
 }
