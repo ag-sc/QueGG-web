@@ -32,11 +32,11 @@ public class PropertyManagement implements ConstantsQuestion{
        this.language=langaugeT; 
     }
 
-    public  void generateProperty(String propertyInputDir, String labelFileName, Integer numberOfTriples, Set<String> exitProp) throws Exception {
+    public  void generateProperty(String propertyInputDir, String labelFileName, Integer numberOfTriples, Set<String> exitProp, Set<String> seletProp) throws Exception {
        
         Set<String> properties = FileUtils.getFiles(propertyInputDir);
         
-        System.out.println(propertyInputDir+" "+" "+labelFileName);
+        System.out.println(propertyInputDir+" "+" "+labelFileName+" properties:"+properties.size());
         
         if (properties.isEmpty()) {
             throw new Exception("No property file to process!!");
@@ -55,10 +55,15 @@ public class PropertyManagement implements ConstantsQuestion{
                 continue;
             }*/
             String propertyMatch=propertyT.replace(".ttl", "");
-            if(exitProp.contains(propertyMatch)){
+            /*if(exitProp.contains(propertyMatch)){
+                // if this property is already addressed the ignore.
                 //System.out.println("propertyMatch::"+propertyMatch);
                 continue;
-            }                
+            } */
+            if(!seletProp.contains(propertyMatch)){
+                continue;
+            }
+            
             this.property=propertyT;
             String propertyFile = propertyInputDir + propertyT;
             String content = matchLabelsWithEntities(propertyFile, labelFileName, numberOfTriples);
@@ -243,12 +248,12 @@ public class PropertyManagement implements ConstantsQuestion{
         List<TripleLable> offLineResults = new ArrayList<TripleLable>();
         String content = "";
         Integer lineNumber = 0;
+        System.out.println("now running property::"+propertyFile);
         try {
             reader = new BufferedReader(new FileReader(labelFileName));
-            line = reader.readLine();
 
-            while (line != null) {
-                line = reader.readLine();
+            while ((line = reader.readLine()) != null) {
+                //System.out.println(propertyFile+" line::"+line);
 
                 if (line != null && line.contains("http"))
                     ; else {
@@ -305,16 +310,27 @@ public class PropertyManagement implements ConstantsQuestion{
             Integer index = 0;
             for (TripleLable offLineResult : offLineResults) {
                 String key = offLineResult.getObjectUri().trim().strip().stripLeading().stripTrailing();
-                String objectLabel = null;
+                String objectLabel = null,subjectLabel=null;
                 //if (objectLabelHash.containsKey(key)) {
                 index = index + 1;
                 objectLabel = objectLabelHash.get(key);
-                String fileLine = offLineResult.getSubjectUri() + "=" + offLineResult.getSubjectLabel()
+                if(objectLabel!=null){
+                    ;
+                }
+                else
+                    objectLabel=offLineResult.getObjectUri();
+                
+                subjectLabel=offLineResult.getSubjectLabel().replace("\"", "");
+                objectLabel=objectLabel.replace("\"", "");
+                
+                String fileLine = offLineResult.getSubjectUri() + "=" + subjectLabel
                         + "=" + offLineResult.getObjectUri() + "=" + objectLabel;
                 fileLine = fileLine + "\n";
                 content += fileLine;
+                
+                
 
-                System.out.println(this.language+"_"+this.property+"_"+index + " subject:" + offLineResult.getSubjectUri() + " subjectLabel:" + offLineResult.getSubjectLabel()
+                System.out.println(this.language+"_"+this.property+"_"+index + " subject:" + offLineResult.getSubjectUri() + " subjectLabel:" + subjectLabel
                         + " " + " objectUri:" + offLineResult.getObjectUri() + " " + " objectLabel:" + objectLabel);
 
                 //}

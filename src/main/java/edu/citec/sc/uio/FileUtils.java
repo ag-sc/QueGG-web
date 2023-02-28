@@ -151,6 +151,7 @@ public class FileUtils {
             reader.close();
 
         } catch (Exception ex) {
+            System.out.println("need property file for making grep files!!");
             Logger.getLogger(PropertyManagement.class.getName()).log(Level.SEVERE, null, ex);
         }
 

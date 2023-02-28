@@ -5,9 +5,14 @@ import edu.citec.sc.queggweb.turtle.ConstantsQuestion;
 import edu.citec.sc.queggweb.turtle.EntityManagement;
 import edu.citec.sc.queggweb.turtle.PropertyManagement;
 import edu.citec.sc.uio.FileUtils;
+import edu.citec.sc.uio.Matcher;
 import java.io.File;
 import java.io.IOException;
 import static java.lang.System.exit;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,10 +36,10 @@ import org.apache.commons.io.FilenameUtils;
  */
 public class MainTripletoQuestionsEntity implements ConstantsQuestion {
 
-    public static void main(String[] args) {
+    public static void PropertyGeneration() {
         //List<String> languages = Stream.of(italian,german,spanish,english).collect(Collectors.toCollection(ArrayList::new));
         //List<String> menus = Stream.of(FIND_ENTITIES).collect(Collectors.toCollection(ArrayList::new));
-        List<String> languages = Stream.of(spanish).collect(Collectors.toCollection(ArrayList::new));
+        List<String> languages = Stream.of(english).collect(Collectors.toCollection(ArrayList::new));
         List<String> menus = Stream.of(BUILD_TRIPLE_WITH_LABELS_ENTITY).collect(Collectors.toCollection(ArrayList::new));
         List<String> propertyFiles = Stream.of(mappingbased_objects, specific_mappingbased_properties, mappingbased_literals, persondata, mappingbased_objects_disjoint_domain, mappingbased_objects_disjoint_range, infobox_properties).collect(Collectors.toCollection(ArrayList::new));
         Integer numberOfTriples = -1;
@@ -44,7 +49,8 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
             String turtleDir = languageDir + File.separator + turtle + File.separator;
             String entittyDir = languageDir + File.separator + entity + File.separator;
             String propertyDir = languageDir + File.separator + PROPERTY + File.separator;
-
+            String SelectPropertiesDir = languageDir + File.separator + "select" + File.separator;
+            // first step is to create properties file...inbox file takes lot of time
             if (menus.contains(FIND_PROPERTY)) {
                 String content = "";
                 Map<String, String> allProperties = new TreeMap<String, String>();
@@ -58,7 +64,9 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
                 writeInFile(content, propertyDir + PROPERTY + ".txt");
                 System.out.println("completed!!!");
             }
-
+            // second step is to create turtle file containing triples..
+            //this code generates grep files. after running those files. 
+            //the property.ttl files, the grep files has to be run
             if (menus.contains(BUILD_PROPERTY_FILES)) {
                 String allTriple = mappingbased_objects + underscore + language + ttl;
                 String grepFile = GREP_COMMAND_FILE + underscore + language + sh;
@@ -75,16 +83,19 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
 
                 }
             }
+            // third step is to create txt file containing triples..property.txt contains labels. this steps take time to finish
             if (menus.contains(BUILD_TRIPLE_WITH_LABELS_ENTITY)) {
-                
-               Set<String> exitProp=getExistingProperties(entittyDir);
-                   
+               //check the properties already done.
+                Set<String> exitProp=getExistingProperties(propertyDir);
+                //find selected properties.
+                Set<String> seletProp=getSelectProperties(SelectPropertiesDir);
                 String labelFile = labels + underscore + language + ttl;
+                System.out.println("exitProp::"+exitProp);
+                System.out.println("seletProp::"+seletProp);
                 try {            
                   
                     PropertyManagement propertyManagement = new PropertyManagement(language);
-                    propertyManagement.generateProperty(entittyDir,
-                            turtleDir + labelFile, numberOfTriples,exitProp);
+                    propertyManagement.generateProperty(propertyDir,turtleDir + labelFile, numberOfTriples,exitProp,seletProp);
                     /*propertyManagement.generatePropertyFromList(propertyDir,propertyFile,
                             turtleDir + labelFile, numberOfTriples,exitProp);*/
                     System.out.println("property management is completed!!!");
@@ -92,7 +103,7 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
                     Logger.getLogger(MainTripletoQuestionsEntity.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            if (menus.contains(BUILD_TRIPLE_WITH_LABELS_PROPERTY)) {
+            /*if (menus.contains(BUILD_TRIPLE_WITH_LABELS_PROPERTY)) {
                 
                Set<String> exitProp=getExistingProperties(propertyDir);
                    
@@ -102,13 +113,13 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
                     PropertyManagement propertyManagement = new PropertyManagement(language);
                     propertyManagement.generateProperty(propertyDir,
                             turtleDir + labelFile, numberOfTriples,exitProp);
-                    /*propertyManagement.generatePropertyFromList(propertyDir,propertyFile,
-                            turtleDir + labelFile, numberOfTriples,exitProp);*/
+                    //propertyManagement.generatePropertyFromList(propertyDir,propertyFile,
+                    //        turtleDir + labelFile, numberOfTriples,exitProp);
                     System.out.println("property management is completed!!!");
                 } catch (Exception ex) {
                     Logger.getLogger(MainTripletoQuestionsEntity.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
+            }*/
         }
 
     }
@@ -152,6 +163,40 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
         }
         return properties;
 
+    }
+    
+    private static Set<String> getSelectProperties(String propertyDir) {
+        Set<String> properties = new TreeSet<String>();
+        String[] file = new File(propertyDir).list();
+        for (String fileString : file) {
+            Set<String> temProps = getSetFromFile(propertyDir + fileString);
+            if (!temProps.isEmpty()) {
+                properties.addAll(temProps);
+            }
+
+        }
+        return properties;
+
+    }
+    
+    public static Set<String> getSetFromFile(String propertyFile) {
+        Set<String> results = new TreeSet<String>();
+
+        Path path = Paths.get(propertyFile);
+
+        try {
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for (String line : lines) {
+                line = line.strip().stripLeading().stripTrailing().trim();
+                line = Matcher.propertyColonToSlash(line);
+                results.add(line);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return results;
     }
 
 }

@@ -31,16 +31,17 @@ public interface ConstantsQuestion {
     public static String entity = "entity";
     public static String resourceDir = "../resources/";
 
+    //take 9 turtle files
     public static String instance_types = "instance_types";
     public static String labels = "labels";
-    
     public static String mappingbased_objects = "mappingbased_objects";
-    public static String persondata = "persondata";
-    public static String infobox_properties = "infobox_properties";
-    public static String specific_mappingbased_properties="specific_mappingbased_properties";
     public static String mappingbased_literals="mappingbased_literals";
     public static String mappingbased_objects_disjoint_domain="mappingbased_objects_disjoint_domain";
     public static String mappingbased_objects_disjoint_range="mappingbased_objects_disjoint_range";
+    public static String specific_mappingbased_properties="specific_mappingbased_properties";
+    public static String persondata = "persondata";
+    public static String infobox_properties = "infobox_properties";
+   
 
     
 

@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class QueggWebApplication {
     
      public static void main(String[] args) {
- 
-            SpringApplication.run(QueggWebApplication.class, args);
+            MainTripletoQuestionsEntity.PropertyGeneration();
+            //SpringApplication.run(QueggWebApplication.class, args);
     }
 
     /*public static void main(String[] args) {
