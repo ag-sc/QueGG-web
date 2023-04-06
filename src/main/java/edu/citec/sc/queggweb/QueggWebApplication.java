@@ -9,10 +9,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class QueggWebApplication {
-    
-     public static void main(String[] args) {
-            MainTripletoQuestionsEntity.PropertyGeneration();
-            //SpringApplication.run(QueggWebApplication.class, args);
+
+    public static void main(String[] args) {
+        //MainTripletoQuestionsEntity.PropertyGeneration();
+        SpringApplication.run(QueggWebApplication.class, args);
     }
 
     /*public static void main(String[] args) {
@@ -35,5 +35,4 @@ public class QueggWebApplication {
        
      
     }*/
-
 }
