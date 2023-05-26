@@ -1,4 +1,4 @@
-package edu.citec.sc.queggweb;
+package edu.citec.sc.uio;
 
 
 import edu.citec.sc.queggweb.turtle.ConstantsQuestion;
