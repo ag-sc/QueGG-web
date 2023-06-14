@@ -24,11 +24,7 @@ import static java.lang.System.exit;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -62,9 +58,19 @@ public class QueryController implements Constants{
     @GetMapping("/query")
     public Map<String, Object> query(@RequestParam(name="q", required=false, defaultValue="") String query,
                                      @RequestParam(name="answer", required=false, defaultValue="") String answer,
+                                     @RequestParam(name="lang", required=false, defaultValue="en") String queryLang,
                                      Model model) {
         Map<String, Object> result = new HashMap<>();
-        String language ="en";
+        String language = "en";
+
+        final List<String> validLanguages = Arrays.asList(new String[] {"en", "de", "es", "it"});
+        if (queryLang != null) {
+            queryLang = queryLang.strip().toLowerCase();
+            if (validLanguages.contains(queryLang)) {
+                language = queryLang;
+            }
+        }
+
         Boolean online=true;
         String INDEX_DIR = resourceDir+language+Constants.indexDir;
         
@@ -81,8 +87,8 @@ public class QueryController implements Constants{
      
         try {
             System.out.println("search query is::" + query);
-            Integer thresold=10;
-            suggestions = questions.autocomplete(INDEX_DIR,query, thresold,lastQuestions);
+            Integer threshold = 10;
+            suggestions = questions.autocomplete(INDEX_DIR, query, threshold, lastQuestions);
             this.lastQuestions=new ArrayList<Question>();
             this.lastQuestions.addAll(suggestions);
             autocompleteSuggestions = questions.suggestionsToResults(suggestions,query);

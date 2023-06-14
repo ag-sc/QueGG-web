@@ -11,7 +11,7 @@ function performQuery(qry) {
 
     $.ajax({
         url: window.QUERY_URI,
-        data: {'q': qry},
+        data: {'q': qry, 'lang': getActiveLang()},
         type: "GET",
         cache: false,
     }).done(function (res) {
@@ -213,6 +213,11 @@ function setupAutoComplete(input) {
         }
     }
 
+    function getActiveLang() {
+        var e = document.getElementById("q_lang_select");
+        return e.value;
+    }
+
     async function fetchAnswer(for_question, update_input) {
         console.log(for_question);
         if (!for_question) { return; }
@@ -220,6 +225,7 @@ function setupAutoComplete(input) {
 
         const query_uri = new URL(window.location.protocol + "//" + window.location.host + window.QUERY_URI + "query");
         query_uri.searchParams.append("q", for_question.text);
+        query_uri.searchParams.append("lang", getActiveLang());
         query_uri.searchParams.append("answer", "yes");
 
         let res = null;
@@ -293,6 +299,7 @@ function setupAutoComplete(input) {
 
         const query_uri = new URL(window.location.protocol + "//" + window.location.host + window.QUERY_URI + "query");
         query_uri.searchParams.append("q", qry);
+        query_uri.searchParams.append("lang", getActiveLang());
 
         document.getElementById("answer-spinner").style.display = "block";
         const res = await fetch(query_uri, {
