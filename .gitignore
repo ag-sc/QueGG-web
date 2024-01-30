@@ -1,6 +1,10 @@
 .idea
 quegg-web.iml
 target/
+resources/en/
+resources/it/
+resources/es/
+
 
 # Compiled class file
 *.class

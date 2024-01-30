@@ -23,4 +23,4 @@ FROM adoptopenjdk/openjdk15:jre-15.0.2_7-debian
 COPY --from=buildweb /source/target/*.jar /app/webapp.jar
 COPY --from=buildconv /source/target/QuestionGrammarGenerator.jar /app/generator.jar
 
-CMD ["java", "-Dlog4j2.formatMsgNoLookups=True", "-jar", "/app/webapp.jar"]
+CMD ["java", "-jar", "/app/webapp.jar"]

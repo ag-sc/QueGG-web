@@ -1,8 +1,15 @@
 package edu.citec.sc.queggweb.views;
 
+
+import edu.citec.sc.uio.BashScript;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import edu.citec.sc.queggweb.constants.Constants;
+import edu.citec.sc.uio.CsvFile;
 import edu.citec.sc.queggweb.data.*;
+import static edu.citec.sc.uio.BashScript.FIND_ABSTRACT;
+import static edu.citec.sc.uio.BashScript.FIND_IMAGE_LINK;
+import static edu.citec.sc.uio.BashScript.FIND_WIKI_LINK;
 import lombok.val;
 import org.apache.jena.query.*;
 import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
@@ -13,14 +20,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.UnsupportedEncodingException;
+import static java.lang.System.exit;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
-public class QueryController {
+public class QueryController implements Constants{
+    
+    private List<Question> lastQuestions=new ArrayList<Question>();
 
     private Cache<String, Map<String, String>> resourceCache = CacheBuilder.newBuilder()
             .maximumSize(5000)
@@ -39,18 +58,121 @@ public class QueryController {
     public Map<String, String> resolveResource(@RequestParam(name="r") String resourceName, Model model) {
         return resourceSparql(resourceName);
     }
-
+    
     @GetMapping("/query")
     public Map<String, Object> query(@RequestParam(name="q", required=false, defaultValue="") String query,
                                      @RequestParam(name="answer", required=false, defaultValue="") String answer,
-                                     @RequestParam(name="target", required=false, defaultValue="default") String subtree,
+                                     Model model) {
+        Map<String, Object> result = new HashMap<>();
+        String language ="de";
+        Boolean online=true;
+        String INDEX_DIR = resourceDir+language+Constants.indexDir;
+        
+        System.out.println("INDEX_DIR::"+INDEX_DIR);
+        //exit(1);
+        
+        List<String> menus = Stream.of(FIND_WIKI_LINK, FIND_ABSTRACT, FIND_IMAGE_LINK).collect(Collectors.toCollection(ArrayList::new));
+
+        result.put("query", query);
+        result.put("question_count", questions.size());
+        
+        List<AutocompleteSuggestion> autocompleteSuggestions =new ArrayList<AutocompleteSuggestion>();
+        List<Question> suggestions = new ArrayList<Question>();
+     
+        try {
+            System.out.println("search query is::" + query);
+            Integer thresold=10;
+            suggestions = questions.autocomplete(INDEX_DIR,query, thresold,lastQuestions);
+            this.lastQuestions=new ArrayList<Question>();
+            this.lastQuestions.addAll(suggestions);
+            autocompleteSuggestions = questions.suggestionsToResults(suggestions,query);
+            result.put("results", autocompleteSuggestions);
+            result.put("answer", null);
+     
+            if (suggestions.size() > 0 && suggestions.get(0) != null) {
+                for (AutocompleteSuggestion autocompleteSuggestion : autocompleteSuggestions) {
+                    String question = autocompleteSuggestion.getText().toLowerCase().stripLeading().stripLeading().trim();
+                    query = query.toLowerCase().stripLeading().stripLeading().trim();
+                    String sparql = autocompleteSuggestion.getSparql();
+                    String answerUri = autocompleteSuggestion.getAnswerUri();
+                    String answerLabel = autocompleteSuggestion.getAnswerLabel();
+                    String answerType = autocompleteSuggestion.getAnswerLabel();
+                    Boolean flag=autocompleteSuggestion.isLeaf();
+                     /*if(!flag&&(query.endsWith("?")||query.endsWith(".")))
+                        flag=true;*/
+                     //System.out.println(question+"   autocompleteSuggestion.isLeaf()" + autocompleteSuggestion.isLeaf()+" "+flag);
+                       //System.out.println("query is::" + query);
+                        //System.out.println("question is::" + question);
+                       
+                        //System.out.println("answerUri is::" + answerUri);
+                        
+                    /*String question=  autocompleteSuggestions.get(0).getText();
+                    String sparql = question.getSparql();
+                    String answerUri = question.getAnswer();
+                    String answerLabel = question.getAnswerLabel();
+                    String answerType = question.getAnswerLabel();
+                    System.out.println(query+"   :::" + question.getQuestion());*/
+                    System.out.println(query+" question:"+question+"   autocompleteSuggestion.isLeaf()" + autocompleteSuggestion.isLeaf()+" "+flag);
+
+
+                    if (flag) {
+                        System.out.println("query is::" + query);
+                        System.out.println("question is::" + question);
+                        System.out.println("answerUri is::" + answerUri);
+
+                        //executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql);
+                        if (online) {
+                            executeSparqlOnline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
+                        } else {
+                            executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
+                        }
+                        query = "";
+
+                    }
+
+                }
+
+            }
+
+            
+            System.out.println("!!!!!!!!!!!!!!!!!!End!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            
+           
+            /*if (!"".equals(answer) && suggestions.size() > 0 && suggestions.get(0) != null) {
+                Question question = suggestions.get(0);
+                result.put("question", question.getQuestion());
+                result.put("answer", question.getAnswer());
+                result.put("sparql", question.getSparql());
+                System.out.println("question::"+question.getQuestion()+" "+question.getQuestion().length());
+                System.out.println("query::"+query+" "+query.length());
+                System.out.println("sparql::"+question.getSparql());
+                if(query.contains(question.getQuestion()))
+                   executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
+                //System.out.println("question::"+question.getQuestion());
+                //System.out.println("answer::"+question.getAnswer());
+                //System.out.println("sparql::"+question.getSparql());
+                //executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
+            }*/
+        } catch (Exception ex) {
+            Logger.getLogger(QueryController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+        
+      
+        return result;
+    }
+
+    /*@GetMapping("/query")
+    public Map<String, Object> query(@RequestParam(name="q", required=false, defaultValue="") String query,
+                                     @RequestParam(name="answer", required=false, defaultValue="") String answer,
                                      Model model) {
         Map<String, Object> result = new HashMap<>();
 
         result.put("query", query);
         result.put("question_count", questions.size());
 
-        val suggestions = questions.autocomplete(subtree, query,20, 4);
+        val suggestions = questions.autocomplete(query,20, 4);
         val results = questions.suggestionsToResults(suggestions);
 
         result.put("results", results);
@@ -59,17 +181,31 @@ public class QueryController {
         if (suggestions.size() > 0 && null != suggestions.get(0).getData()) {
             answer = "true";
         }
+        
+          System.out.println("!!!!!!!!!!!!!!!!!!Start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        for (AutocompleteSuggestion autocompleteSuggestion:results){
+          
+             System.out.println("autocompleteSuggestion.getText()::"+autocompleteSuggestion.getText());
+             System.out.println("autocompleteSuggestion.getSparql()::"+autocompleteSuggestion.getSparql());
+             System.out.println("autocompleteSuggestion.getSize()::"+autocompleteSuggestion.getSize());
+             System.out.println();
+        }
+        System.out.println("!!!!!!!!!!!!!!!!!!End!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
 
         if (!"".equals(answer) && suggestions.size() > 0 && suggestions.get(0).getData() != null) {
             Question question = suggestions.get(0).getData();
             result.put("question", question.getQuestion());
             result.put("answer", question.getAnswer());
             result.put("sparql", question.getSparql());
+            //System.out.println("question::"+question.getQuestion());
+            //System.out.println("answer::"+question.getAnswer());
+            //System.out.println("sparql::"+question.getSparql());
             executeSparql(result, endpoint.getPrefixSparql().trim() + "\n" + question.getSparql());
         }
 
         return result;
-    }
+    }*/
 
     private List<String> gatherSparqlResourceLabels(List<TrieNode<Question>> suggestions) {
         List<String> labels = new ArrayList<>();
@@ -110,61 +246,10 @@ public class QueryController {
         return labels;
     }
 
-    private void markEntities(String subtree, String query, List<AutocompleteSuggestion> results) {
-        val extendedSuggestions = questions.autocomplete(subtree, query,100, 5);
-        val extendedResults = questions.suggestionsToResults(extendedSuggestions);
-
-        val prefixTrie = new Trie<String>();
-        val suffixTrie = new Trie<String>();
-        val prefix = query.toLowerCase().trim();
-
-        for (AutocompleteSuggestion suggestion: extendedResults) {
-            val suggestionText = suggestion.getText();
-            val textRemainder = suggestionText.substring(prefix.length()).strip();
-            if (textRemainder.length() == 0) continue;
-            StringBuilder sb = new StringBuilder(textRemainder);
-            System.err.println(suggestionText + " | " + textRemainder);
-            try {
-                suffixTrie.insertDefault(sb.reverse().toString(), textRemainder);
-            } catch (TrieNode.DuplicateInsertException ignored) {}
-            try {
-                prefixTrie.insertDefault(suggestionText, suggestionText);
-            } catch (TrieNode.DuplicateInsertException ignored) {}
-        }
-
-        String shortestSuffix = null;
-
-        TrieNodeVisitor<String> visitor = new TrieNodeVisitor<>(suffixTrie.getRoot(subtree)) {
-            @Override
-            protected void visit(TrieNode<String> node) {
-                if (node == null) return;
-                // leaf nodes can never present a suffix
-                if (!node.isLeaf()) return;
-
-                val pathParts = new ArrayList<TrieNode<String>>();
-                TrieNode<String> current = node;
-                while (current != null) {
-                    pathParts.add(current);
-                    if (current.getParent() != null && current.getParent() != current) {
-                        current = current.getParent();
-                    } else {
-                        current = null;
-                    }
-                }
-
-                for (int i = pathParts.size() - 1; i >= 0; i--) {
-
-                }
-
-                System.err.println(node + " " +  pathParts.toString());
-            }
-        };
-
-        System.err.println(prefixTrie);
-        System.err.println(suffixTrie);
-    }
+ 
 
     private Map<String, String> resourceSparql(String resource) {
+        System.out.println("resource:::::::::"+resource);
         val cached = resourceCache.getIfPresent(resource);
         if (cached != null) {
             return cached;
@@ -208,8 +293,229 @@ public class QueryController {
 
         return null;
     }
+    
+    private void executeSparqlOffline(Map<String, Object> result, String sparql, String answerUri, String answerLabel, String answerType, List<String> menus) {
+        String abstractfile = "../resources/en/turtle/short_abstracts_sorted_en.ttl";
+        //String wikiLinkFile = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
+        //String imagefileName = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
 
-    private void executeSparql(Map<String, Object> result, String sparql) {
+        List<Map<String, String>> rsmap = new ArrayList<Map<String, String>>();
+        Map<String, String> sparqlEndpointOutput = new TreeMap<String, String>();
+        //String lastPart = getLastPartOfURI(answerUri);
+        //String wikiLink = this.getWikiLink(answerUri);
+        //String abstractText = this.getAbstract(answerUri);
+
+        //old Wikipedia link finding
+        //BashScript bashScript = new BashScript(menus, wikiLinkFile, abstractfile, imagefileName, answerUri);
+        //Wikipedia link finding
+        BashScript bashScript = new BashScript(menus, abstractfile, answerUri);
+
+        
+        
+        //if (answerType.contains("single")) {
+        //sparqlEndpointOutput.put("ethumbnail", "http://commons.wikimedia.org/wiki/Special:FilePath/Watermolen_van_de_polder_De_Dellen,_overzicht_-_Waar,_'t_-_20248138_-_RCE.jpg?width=300");
+        sparqlEndpointOutput.put("result_type", "resource_meta");
+        sparqlEndpointOutput.put("elabel", answerLabel + "@en");
+        sparqlEndpointOutput.put("etype", "Thing");
+        sparqlEndpointOutput.put("elink", bashScript.getWikiLink());
+        sparqlEndpointOutput.put("eabstract", bashScript.getAbstractText() + "@en");
+        rsmap.add(sparqlEndpointOutput);
+        //}
+
+        /*val cached = answerCache.getIfPresent(sparql);
+        if (cached != null) {
+            for (String k : cached.keySet()) {
+                result.put(k, cached.get(k));
+            }
+            return;
+        }
+
+        Query query = null;
+        try {
+            query = QueryFactory.create(sparql);
+        } catch (QueryParseException qpe) {
+            System.err.println("QueryParseException: query: " + sparql);
+            qpe.printStackTrace();
+            result.put("sparql-result", null);
+            result.put("sparql-error", qpe.toString());
+            return;
+        }
+        List<String> resolveResources = new ArrayList<>();
+        List<Map<String, String>> rsmap = new ArrayList<>();
+
+        // Remote execution.
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint.getEndpoint(), query)) {
+            // Set the endpoint specific timeout.
+            ((QueryEngineHTTP) qexec).addParam("timeout", "10000");
+
+            // Execute.
+            ResultSet rs = qexec.execSelect();
+            // ResultSetFormatter.out(System.out, rs, query);
+
+            rsmap = resultSetToMap(resolveResources, rs);
+
+            String sparqlResource = extractResource(sparql);
+            //String sparqlResource =answerUri;
+            System.out.println("sparqlResource::" + sparqlResource);
+
+            if (sparqlResource != null) {
+                Map<String, String> resourceMeta = resourceSparql(sparqlResource);
+                System.out.println("resourceMeta::" + resourceMeta);
+                if (resourceMeta != null && resourceMeta.size() > 0) {
+                    rsmap.add(resourceMeta);
+                }
+            }
+
+            result.put("sparql-result", rsmap);
+            result.put("sparql-error", null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.put("sparql-result", null);
+            result.put("sparql-error", e.toString());
+        }
+
+        for (String resource : resolveResources) {
+            String oresource = resource;
+            if (!resource.startsWith("<")) {
+                resource = "<" + resource;
+            }
+            if (!resource.endsWith(">")) {
+                resource = resource + ">";
+            }
+            val resolved = resourceSparql(resource);
+            if (resolved != null) {
+                //postprocessResolved(resolved);
+                rsmap.add(0, resolved);
+            } else {
+                Map<String, String> tmp = new HashMap<>();
+                tmp.put("o", oresource);
+                rsmap.add(0, tmp);
+            }
+        }
+         */
+        for (Map<String, String> testMap : rsmap) {
+            for (String key : testMap.keySet()) {
+                String value = testMap.get(key);
+                System.out.println("key::" + key);
+                System.out.println("value::" + value);
+            }
+        }
+
+        result.put("sparql-result", rsmap);
+
+        answerCache.put(sparql, result);
+    }
+
+    private String getLastPartOfURI(String answerUri) {
+        URI uri;String lastPart=null;
+        try {
+            uri = new URI(answerUri);
+            String path = uri.getPath();
+            lastPart = path.substring(path.lastIndexOf('/') + 1);
+        } catch (URISyntaxException ex) {
+            System.out.println("invalid URI::" + ex.getMessage());
+            Logger.getLogger(QueryController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return lastPart;
+    }
+
+     private void executeSparqlOnline(Map<String, Object> result, String sparql,String answerUri,String answerLabel, String answerType,List<String> menus) {
+        val cached = answerCache.getIfPresent(sparql);
+        if (cached != null) {
+            for (String k: cached.keySet()) {
+                result.put(k, cached.get(k));
+            }
+            return;
+        }
+
+        Query query = null;
+        try {
+            query = QueryFactory.create(sparql);
+        } catch (QueryParseException qpe) {
+            System.err.println("QueryParseException: query: " + sparql);
+            qpe.printStackTrace();
+            result.put("sparql-result", null);
+            result.put("sparql-error", qpe.toString());
+            executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
+
+            return;
+        }
+        List<String> resolveResources = new ArrayList<>();
+        List<Map<String, String>> rsmap = new ArrayList<>();
+
+        // Remote execution.
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint.getEndpoint(), query)) {
+            // Set the endpoint specific timeout.
+            ((QueryEngineHTTP)qexec).addParam("timeout", "10000") ;
+
+            // Execute.
+            ResultSet rs = qexec.execSelect();
+            // ResultSetFormatter.out(System.out, rs, query);
+
+            rsmap = resultSetToMap(resolveResources, rs);
+
+            String sparqlResource = extractResource(sparql);
+            //String sparqlResource =answerUri;
+            //System.out.println("sparqlResource::"+sparqlResource);
+
+            if (sparqlResource != null) {
+                Map<String, String> resourceMeta = resourceSparql(sparqlResource);
+                //System.out.println("resourceMeta::"+resourceMeta);
+                if (resourceMeta != null && resourceMeta.size() > 0) {
+                    rsmap.add(resourceMeta);
+                }
+            }
+
+            result.put("sparql-result", rsmap);
+            result.put("sparql-error", null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.put("sparql-result", null);
+            result.put("sparql-error", e.toString());
+        }
+
+        for (String resource: resolveResources) {
+            String oresource = resource;
+            if (!resource.startsWith("<")) {
+                resource = "<" + resource;
+            }
+            if (!resource.endsWith(">")) {
+                resource = resource + ">";
+            }
+            val resolved = resourceSparql(resource);
+            if (resolved != null) {
+                //postprocessResolved(resolved);
+                rsmap.add(0, resolved);
+            } else {
+                Map<String, String> tmp = new HashMap<>();
+                tmp.put("o", oresource);
+                rsmap.add(0, tmp);
+            }
+        }
+
+        result.put("sparql-result", rsmap);
+        /*if(rsmap.isEmpty()){
+             System.out.println("rsmap::"+rsmap);
+             System.out.println("sparql::"+sparql);
+             System.out.println("answerUri::"+answerUri);
+            exit(1);
+        }*/
+        //System.out.println("rsmap::!!!!!!!!!!!!!!!!!!!!!!!"+rsmap);  
+         /*if(result.isEmpty()){
+              System.out.println("result::!!!!!!!!!!!!!!!!!!!!!!!"+result);  
+              exit(1);
+         }*/
+        /*for(String key:result.keySet()){
+            Object obje=result.get(key);
+           System.out.println("key::"+key);
+           System.out.println("Object::"+obje);
+
+        }*/
+       
+        answerCache.put(sparql, result);
+    }
+
+    /*private void executeSparql(Map<String, Object> result, String sparql) {
         val cached = answerCache.getIfPresent(sparql);
         if (cached != null) {
             for (String k: cached.keySet()) {
@@ -280,7 +586,7 @@ public class QueryController {
         result.put("sparql-result", rsmap);
 
         answerCache.put(sparql, result);
-    }
+    }*/
 
     private void postprocessResolved(Map<String, String> resolved, String oresource) {
         if(resolved.getOrDefault("elabel", null) == null) {
@@ -370,4 +676,16 @@ public class QueryController {
 
         return result;
     }
+
+    private String getWikiLink(String answerUri) {
+        String lastPart=this.getLastPartOfURI(answerUri);
+        return "http://en.wikipedia.org/wiki/"+lastPart;
+    }
+
+    private String getAbstract(String answerUri) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+   
+
 }

@@ -11,10 +11,17 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class AutocompleteSuggestion {
+public class AutocompleteSuggestion{
     private String text;
     private String sparql;
     private boolean answerable;
+    private String answerUri;
+    private String answerLabel;
+    private boolean ethumbnail;
+    private String result_type;
+    private String etype;
+    private String elink;
+    private boolean eabstract;
     private boolean leaf;
     private int size;
     private int entityOnset = -1;
@@ -27,8 +34,18 @@ public class AutocompleteSuggestion {
         this.setAnswerable(fromNode.getData() != null);
         this.setSize(fromNode.size());
     }
+    
+    public AutocompleteSuggestion(Question question) {
+        this.setText(question.getQuestion());
+        this.setLeaf(false);
+        this.setSparql(question.getSparql());
+        this.setAnswerable(true);
+        this.setAnswerUri(question.getAnswer());
+        this.setSize(size);
+        this.setAnswerLabel(question.getAnswerLabel());
+    }
 
-    public void align(List<String> resourceLabels) {
+      public void align(List<String> resourceLabels) {
         if (false) {
             int bestOnset = -1;
 
