@@ -73,6 +73,8 @@ public class QueryController implements Constants{
 
         Boolean online=true;
         String INDEX_DIR = resourceDir+language+Constants.indexDir;
+        String abstractfile = resourceDir+language+turtleDir+"short_abstracts_sorted_"+language+".ttl";
+
         
         System.out.println("INDEX_DIR::"+INDEX_DIR);
         //exit(1);
@@ -128,9 +130,9 @@ public class QueryController implements Constants{
 
                         //executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql);
                         if (online) {
-                            executeSparqlOnline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
+                            executeSparqlOnline(abstractfile,result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
                         } else {
-                            executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
+                            executeSparqlOffline(abstractfile,result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
                         }
                         query = "";
 
@@ -300,8 +302,8 @@ public class QueryController implements Constants{
         return null;
     }
     
-    private void executeSparqlOffline(Map<String, Object> result, String sparql, String answerUri, String answerLabel, String answerType, List<String> menus) {
-        String abstractfile = "../resources/en/turtle/short_abstracts_sorted_en.ttl";
+    private void executeSparqlOffline(String abstractfile,Map<String, Object> result, String sparql, String answerUri, String answerLabel, String answerType, List<String> menus) {
+        //String abstractfile = "../resources/en/turtle/short_abstracts_sorted_en.ttl";
         //String wikiLinkFile = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
         //String imagefileName = "../resources/en/turtle/wikipedia_links_en_filter.ttl";
 
@@ -425,7 +427,7 @@ public class QueryController implements Constants{
         return lastPart;
     }
 
-     private void executeSparqlOnline(Map<String, Object> result, String sparql,String answerUri,String answerLabel, String answerType,List<String> menus) {
+     private void executeSparqlOnline(String abstractfile,Map<String, Object> result, String sparql,String answerUri,String answerLabel, String answerType,List<String> menus) {
         val cached = answerCache.getIfPresent(sparql);
         if (cached != null) {
             for (String k: cached.keySet()) {
@@ -442,7 +444,7 @@ public class QueryController implements Constants{
             qpe.printStackTrace();
             result.put("sparql-result", null);
             result.put("sparql-error", qpe.toString());
-            executeSparqlOffline(result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
+            executeSparqlOffline(abstractfile,result, endpoint.getPrefixSparql().trim() + "\n" + sparql, answerUri, answerLabel, answerType, menus);
 
             return;
         }
