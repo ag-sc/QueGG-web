@@ -183,18 +183,19 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
     
     public static Set<String> getSetFromFile(String propertyFile) {
         Set<String> results = new TreeSet<String>();
-
         Path path = Paths.get(propertyFile);
-
         try {
             List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
             for (String line : lines) {
-                line = line.strip().stripLeading().stripTrailing().trim();
-                line = Matcher.propertyColonToSlash(line);
-                results.add(line);
+                try {
+                    line = line.strip().stripLeading().stripTrailing().trim();
+                    line = Matcher.propertyColonToSlash(line);
+                    results.add(line);
+                } catch (Exception e) {
+                    continue;
+                }
             }
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
