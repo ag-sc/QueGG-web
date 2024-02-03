@@ -41,8 +41,8 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
     public static void PropertyGeneration() {
         //List<String> languages = Stream.of(italian,german,spanish,english).collect(Collectors.toCollection(ArrayList::new));
         //List<String> menus = Stream.of(FIND_ENTITIES).collect(Collectors.toCollection(ArrayList::new));
-        List<String> languages = Stream.of(english).collect(Collectors.toCollection(ArrayList::new));
-        List<String> menus = Stream.of(FIND_PROPERTY,BUILD_PROPERTY_FILES,BUILD_TRIPLE_WITH_LABELS_ENTITY).collect(Collectors.toCollection(ArrayList::new));
+        List<String> languages = Stream.of(german, italian, spanish).collect(Collectors.toCollection(ArrayList::new));
+        List<String> menus = Stream.of(BUILD_PROPERTY_FILES,BUILD_TRIPLE_WITH_LABELS_ENTITY).collect(Collectors.toCollection(ArrayList::new));
         List<String> propertyFiles = Stream.of(mappingbased_objects, specific_mappingbased_properties, mappingbased_literals, persondata, mappingbased_objects_disjoint_domain, mappingbased_objects_disjoint_range, infobox_properties).collect(Collectors.toCollection(ArrayList::new));
         Integer numberOfTriples = -1;
 
