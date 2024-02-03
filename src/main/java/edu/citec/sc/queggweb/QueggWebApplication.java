@@ -1,5 +1,6 @@
 package edu.citec.sc.queggweb;
 
+import edu.citec.sc.script.processing.MainTripletoQuestionsEntity;
 import edu.citec.sc.uio.Matcher;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -11,8 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class QueggWebApplication {
 
     public static void main(String[] args) {
-        //MainTripletoQuestionsEntity.PropertyGeneration();
-        SpringApplication.run(QueggWebApplication.class, args);
+        MainTripletoQuestionsEntity.PropertyGeneration();
+        //SpringApplication.run(QueggWebApplication.class, args);
     }
 
     /*public static void main(String[] args) {

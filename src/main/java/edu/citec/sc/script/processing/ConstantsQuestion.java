@@ -22,6 +22,7 @@ public interface ConstantsQuestion {
     public static String SUBJECT = "subject";
     public static String PROPERTY = "property";
     public static String ENITY = "entity";
+    public static String selectDir = "select";
 
     public static String PROPERTY_MARCH = "propertyMatch";
     public static String PROPERTY_NOT_MARCH = "propertyNotMatch";
