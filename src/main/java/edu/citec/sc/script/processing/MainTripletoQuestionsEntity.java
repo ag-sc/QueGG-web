@@ -88,16 +88,16 @@ public class MainTripletoQuestionsEntity implements ConstantsQuestion {
             // third step is to create txt file containing triples..property.txt contains labels. this steps take time to finish
             if (menus.contains(BUILD_TRIPLE_WITH_LABELS_ENTITY)) {
                //check the properties already done.
-                Set<String> exitProp=getExistingProperties(propertyDir);
+                //Set<String> exitProp=getExistingProperties(propertyDir);
                 //find selected properties.
-                Set<String> seletProp=getSelectProperties(SelectPropertiesDir);
+                //Set<String> seletProp=getSelectProperties(SelectPropertiesDir);
                 String labelFile = labels + underscore + language + ttl;
-                System.out.println("exitProp::"+exitProp);
-                System.out.println("seletProp::"+seletProp);
+                //System.out.println("exitProp::"+exitProp);
+                //System.out.println("seletProp::"+seletProp);
                 try {            
                   
                     PropertyManagement propertyManagement = new PropertyManagement(language);
-                    propertyManagement.generateProperty(propertyDir,turtleDir + labelFile, numberOfTriples,exitProp,seletProp);
+                    propertyManagement.generateProperty(propertyDir,turtleDir + labelFile, numberOfTriples);
                     /*propertyManagement.generatePropertyFromList(propertyDir,propertyFile,
                             turtleDir + labelFile, numberOfTriples,exitProp);*/
                     System.out.println("property management is completed!!!");

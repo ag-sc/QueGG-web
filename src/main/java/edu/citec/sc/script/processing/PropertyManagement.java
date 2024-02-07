@@ -32,7 +32,7 @@ public class PropertyManagement implements ConstantsQuestion{
        this.language=langaugeT; 
     }
 
-    public  void generateProperty(String propertyInputDir, String labelFileName, Integer numberOfTriples, Set<String> exitProp, Set<String> seletProp) throws Exception {
+    public  void generateProperty(String propertyInputDir, String labelFileName, Integer numberOfTriples) throws Exception {
        
         Set<String> properties = FileUtils.getFiles(propertyInputDir);
         
@@ -60,9 +60,9 @@ public class PropertyManagement implements ConstantsQuestion{
                 //System.out.println("propertyMatch::"+propertyMatch);
                 continue;
             } */
-            if(!seletProp.contains(propertyMatch)){
-                continue;
-            }
+            //if(!seletProp.contains(propertyMatch)){
+            //    continue;
+            //}
             
             this.property=propertyT;
             String propertyFile = propertyInputDir + propertyT;
@@ -253,7 +253,7 @@ public class PropertyManagement implements ConstantsQuestion{
             reader = new BufferedReader(new FileReader(labelFileName));
 
             while ((line = reader.readLine()) != null) {
-                //System.out.println(propertyFile+" line::"+line);
+                System.out.println(propertyFile+" line::"+line);
 
                 if (line != null && line.contains("http"))
                     ; else {
