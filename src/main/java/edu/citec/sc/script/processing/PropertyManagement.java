@@ -253,7 +253,7 @@ public class PropertyManagement implements ConstantsQuestion{
             reader = new BufferedReader(new FileReader(labelFileName));
 
             while ((line = reader.readLine()) != null) {
-                System.out.println(propertyFile+" line::"+line);
+                //System.out.println(propertyFile+" line::"+line);
 
                 if (line != null && line.contains("http"))
                     ; else {
