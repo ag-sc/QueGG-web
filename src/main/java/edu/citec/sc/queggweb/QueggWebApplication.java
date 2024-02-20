@@ -1,5 +1,6 @@
 package edu.citec.sc.queggweb;
 
+import edu.citec.sc.script.indexing.MainLuceneIndex2;
 import edu.citec.sc.script.processing.MainTripletoQuestionsEntity;
 import edu.citec.sc.uio.Matcher;
 import java.io.IOException;
@@ -12,8 +13,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class QueggWebApplication {
 
     public static void main(String[] args) {
-        MainTripletoQuestionsEntity.PropertyGeneration();
-        //SpringApplication.run(QueggWebApplication.class, args);
+        try {
+            MainLuceneIndex2.index();
+            //MainTripletoQuestionsEntity.PropertyGeneration();
+            //SpringApplication.run(QueggWebApplication.class, args);
+        } catch (Exception ex) {
+            Logger.getLogger(QueggWebApplication.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /*public static void main(String[] args) {

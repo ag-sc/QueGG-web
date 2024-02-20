@@ -35,16 +35,16 @@ public class MainLuceneIndex2 implements Constants {
     private static Boolean testFlag = false;
     private static Set<String> menu = new HashSet<String>();
 
-    public static void main(String[] args) throws Exception {
+    public static void index() throws Exception {
         List<String> menus = Stream.of(Constants.WRITE_INDEX).collect(Collectors.toCollection(ArrayList::new));
         //List<String> languages = Stream.of("es","en","de","it").collect(Collectors.toCollection(ArrayList::new));
-        List<String> languages = Stream.of("en").collect(Collectors.toCollection(ArrayList::new));
+        List<String> languages = Stream.of("es","de","it").collect(Collectors.toCollection(ArrayList::new));
 
         Set<String> frames = Stream.of("-NPP-", "-VP-", "-IPP-").collect(Collectors.toCollection(TreeSet::new));
 
         for (String language : languages) {
             String indexDir = resourceDir + language + Constants.indexDir;
-             String questionDir = resourcesBig+ language+ Constants.questionDir ;
+             String questionDir = resourcesOutside+ language+ Constants.questionDir ;
             String reportFile = resourceDir + language + "/" + "total.csv";
             File directory = new File(indexDir);
             FileUtils.cleanDirectory(directory);
